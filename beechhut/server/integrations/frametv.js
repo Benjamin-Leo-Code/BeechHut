@@ -147,6 +147,22 @@ export function createFrameTv({ host, dataDir, matte = 'none', name = 'BeechHut'
     });
   }
 
+  /** The TV's own description of itself (no login needed), written to the log to help with problems. */
+  async function describeTv() {
+    try {
+      const res = await fetch(`http://${host}:8001/api/v2/`, { signal: AbortSignal.timeout(5000) });
+      const info = await res.json();
+      const d = info.device || {};
+      let support = {};
+      try { support = typeof info.isSupport === 'string' ? JSON.parse(info.isSupport) : info.isSupport || {}; } catch { /* */ }
+      log(`TV says: model ${d.modelName ?? '?'}, Frame ${d.FrameTVSupport ?? '?'}, power ${d.PowerState ?? '?'}, `
+        + `token sign-in ${d.TokenAuthSupport ?? '?'}, remote control ${support.remote_available ?? '?'}, `
+        + `version ${info.version ?? '?'}, network ${d.networkType ?? '?'}`);
+    } catch (e) {
+      log(`couldn’t read the TV’s information page on port 8001 (${e.cause?.code || e.name || e.message})`);
+    }
+  }
+
   function open() {
     if (ws && ws.readyState === WebSocket.OPEN) return Promise.resolve();
     if (opening) return opening;
@@ -154,6 +170,7 @@ export function createFrameTv({ host, dataDir, matte = 'none', name = 'BeechHut'
       const saved = await readSaved();
       let { token = '', port } = saved;
       if (!port) {
+        await describeTv();
         // First time: the TV asks "Allow BeechHut?" for a remote-control connection, and the
         // permission it gives there then works for Art Mode too. Try the encrypted port, then
         // the older plain one, which some Frames answer on instead.

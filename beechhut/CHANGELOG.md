@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.9.3
+- Frame TV: before asking for permission, BeechHut writes the TV's own description of itself to the Log tab (model, whether remote control is on, and so on), to help track down connection problems.
+
 ## 0.9.2
 - Frame TV: BeechHut now connects to the TV the same way the open-source samsungtvws library does (without asking for compression), in case the TV ignores connections that ask for it.
 
