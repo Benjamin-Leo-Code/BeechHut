@@ -50,6 +50,12 @@ configuration:
   photo_frame_shape:
     name: Photo frame shape
     description: The frame's width:height, e.g. 16:9. Photos are cropped to this shape. Leave blank for 238:162.
+  frame_tv_address:
+    name: Frame TV address
+    description: The IP address of your Samsung The Frame TV (reserve it in your router so it doesn't change). Photo uploader can then add photos to its Art Mode. Leave blank if you don't have one.
+  frame_tv_matte:
+    name: Frame TV mat
+    description: The mat (border) Art Mode puts round uploaded photos, as Samsung names it, e.g. shadowbox_polar or modern_apricot. Leave blank for none.
   links:
     name: Links
     description: Bookmarks. Icon is a name from dashboardicons.com (e.g. plex) or an image URL. Pinned links go in Quick launch.

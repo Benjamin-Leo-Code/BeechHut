@@ -15,13 +15,15 @@ interface CropOptions {
   title?: string;
   /** Label for the confirm button: Add, or Save when re-cropping. */
   done?: string;
+  /** Widest the result can be, in pixels (it's never wider than the photo allows). */
+  maxWidth?: number;
 }
 
 /**
  * Let the user frame a photo to the photo frame's exact shape.
  * Resolves with a JPEG of the framed part, or null if they cancel.
  */
-export function cropPhoto(src: Blob | string, { aspect, title = 'Crop the photo', done = 'Add' }: CropOptions): Promise<Blob | null> {
+export function cropPhoto(src: Blob | string, { aspect, title = 'Crop the photo', done = 'Add', maxWidth = MAX_WIDTH }: CropOptions): Promise<Blob | null> {
   return new Promise((resolve, reject) => {
     const host = document.createElement('div');
     document.body.append(host);
@@ -40,7 +42,7 @@ export function cropPhoto(src: Blob | string, { aspect, title = 'Crop the photo'
       });
     };
     root.render(
-      <CropDialog url={url} aspect={aspect} title={title} done={done}
+      <CropDialog url={url} aspect={aspect} title={title} done={done} maxWidth={maxWidth}
         onDone={(blob) => finish(() => resolve(blob))} onError={(err) => finish(() => reject(err))} />,
     );
   });
@@ -54,7 +56,7 @@ interface View {
   base: number;                    // scale at zoom 1
 }
 
-function CropDialog({ url, aspect, title, done, onDone, onError }: CropOptions & {
+function CropDialog({ url, aspect, title, done, maxWidth = MAX_WIDTH, onDone, onError }: CropOptions & {
   url: string; onDone: (blob: Blob | null) => void; onError: (err: Error) => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -186,7 +188,7 @@ function CropDialog({ url, aspect, title, done, onDone, onError }: CropOptions &
   const save = () => {
     const v = view.current, scale = v.base * v.zoom;
     const sw = v.ww / scale, sh = v.wh / scale; // the framed part, in photo pixels
-    const width = Math.round(Math.min(MAX_WIDTH, Math.max(sw, Math.min(MIN_WIDTH, v.iw))));
+    const width = Math.round(Math.min(maxWidth, Math.max(sw, Math.min(MIN_WIDTH, v.iw))));
     const canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = Math.round(width / aspect);

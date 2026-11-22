@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.0
+- Photo uploader can now add photos to a **Samsung The Frame** TV's Art Mode (My Photos). Set **Frame TV address** on the Configuration tab; the first time, choose **Allow** on the TV.
+- Choose **Photo frame**, **Frame TV** or **Both** above the Add photos button. With Both, each photo is cropped twice: once for the frame's shape and once for the TV's 16:9.
+- **On the Frame TV** lists your own photos on the TV and marks the one showing. Tap one to **Show now** or **Delete** it.
+- Optional **Frame TV mat** setting for the border Art Mode puts round uploads (none by default).
+
 ## 0.7.0
 - New **Photo uploader** page for a digital photo frame. Add photos from your phone, each cropped to the frame's exact shape first (drag to move, pinch or use the slider to zoom), and see, re-crop or delete the photos already in the frame.
 - Set **Photo frame folder** on the Configuration tab (e.g. `/config/www/photo-frame`), and **Photo frame shape** if your frame isn't 238:162. The page is hidden until the folder is set.

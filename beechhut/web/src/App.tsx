@@ -63,7 +63,7 @@ export function App() {
   const enabled = (p: Page) =>
     !(['containers', 'server'].includes(p) && !meta.integrations.unraid) &&
     !(p === 'home' && !meta.integrations.homeassistant) && !(p === 'network' && !meta.integrations.unifi) &&
-    !(p === 'photos' && !meta.photoFrame);
+    !(p === 'photos' && !meta.photoFrame && !meta.frameTv);
   const nav = NAV.filter((n) => enabled(n.page));
   const mobileNav = nav.filter((n) => n.mobile);
   const isMac = /Mac|iPhone|iPad/.test(navigator.platform);

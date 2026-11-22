@@ -11,6 +11,7 @@ import { createUnifi } from './integrations/unifi.js';
 import { createLinks } from './integrations/links.js';
 import { createNotes } from './integrations/notes.js';
 import { createPhotos, createDemoPhotos } from './integrations/photos.js';
+import { createFrameTv, createDemoFrameTv } from './integrations/frametv.js';
 import { demo, demoLinks } from './demo.js';
 import { buildOverview } from './overview.js';
 
@@ -30,6 +31,8 @@ const i = config.demo
 const notes = createNotes(DATA_DIR);
 const photos = config.demo ? createDemoPhotos(config.photoFrame.aspect)
   : config.photoFrame.dir ? createPhotos(config.photoFrame.dir) : null;
+const frameTv = config.demo ? createDemoFrameTv()
+  : config.frameTv ? createFrameTv({ host: config.frameTv.host, matte: config.frameTv.matte, dataDir: DATA_DIR }) : null;
 
 function demoLinkStore() {
   const store = createLinks(demoLinks.map((g) => ({ ...g, items: g.items.map((l) => ({ ...l, check: false })) })));
@@ -94,6 +97,7 @@ app.get('/api/meta', async () => ({
   haVmName: config.homeassistant?.vmName || 'Home Assistant',
   housePlanUrl: config.housePlanUrl,
   photoFrame: photos ? { aspect: config.photoFrame.aspect } : null,
+  frameTv: frameTv ? { aspect: 16 / 9 } : null,
 }));
 
 app.get('/api/overview', async () => buildOverview({ c, config }));
@@ -151,6 +155,22 @@ app.get('/api/photos/:name', async (req, reply) => {
   const p = await need(photos, 'The photo frame').read(req.params.name);
   // Names are unique and never reused, so the browser can keep them.
   return reply.header('cache-control', 'private, max-age=31536000, immutable').type(p.type).send(p.body);
+});
+
+// Samsung The Frame (Art Mode, My Photos)
+const UPLOAD = { bodyLimit: 25 * 1024 * 1024 };
+const jpegBody = (req) => {
+  if (!Buffer.isBuffer(req.body)) throw Object.assign(new Error('Send the photo as image/jpeg'), { statusCode: 415 });
+  if (!(req.body[0] === 0xff && req.body[1] === 0xd8)) throw Object.assign(new Error('Only JPEG photos can be added'), { statusCode: 400 });
+  return req.body;
+};
+app.get('/api/frametv', async () => need(frameTv, 'The Frame TV').list());
+app.post('/api/frametv', UPLOAD, async (req) => need(frameTv, 'The Frame TV').add(jpegBody(req)));
+app.delete('/api/frametv/:id', async (req) => { await need(frameTv, 'The Frame TV').remove(req.params.id); return { ok: true }; });
+app.post('/api/frametv/:id/show', async (req) => { await need(frameTv, 'The Frame TV').show(req.params.id); return { ok: true }; });
+app.get('/api/frametv/:id/thumbnail', async (req, reply) => {
+  const t = await need(frameTv, 'The Frame TV').thumbnail(req.params.id);
+  return reply.header('cache-control', 'private, max-age=86400').type(t.type).send(t.body);
 });
 
 // ── Front end ───────────────────────────────────────────────────────────────

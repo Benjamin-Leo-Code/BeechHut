@@ -116,6 +116,12 @@ export function loadConfig() {
       dir: photoFrameDir(process.env.BEECHHUT_PHOTO_FRAME_FOLDER || pick(o.photo_frame_folder, y.photo_frame?.folder)),
       aspect: aspectOf(pick(o.photo_frame_shape, y.photo_frame?.shape)),
     },
+    // Samsung The Frame: its address on the network (an IP address is best) and the mat for uploads.
+    frameTv: (() => {
+      const host = String(process.env.BEECHHUT_FRAME_TV || pick(o.frame_tv_address, y.frame_tv?.address) || '')
+        .trim().replace(/^[a-z]+:\/\//i, '').replace(/[:/].*$/, '');
+      return host ? { host, matte: String(pick(o.frame_tv_matte, y.frame_tv?.matte) || 'none').trim() } : null;
+    })(),
     links: !blank(o.links) ? groupLinks(o.links) : Array.isArray(y.links) ? y.links : [],
   };
 }
