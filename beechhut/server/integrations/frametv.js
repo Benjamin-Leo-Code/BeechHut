@@ -59,7 +59,7 @@ function transfer(info, { send, timeout = 60_000 }) {
   });
 }
 
-export function createFrameTv({ host, dataDir, matte = 'none', name = 'BeechHut' }) {
+export function createFrameTv({ host, dataDir, matte = 'none', name = 'BeechHut', log = (m) => console.log(`[Frame TV] ${m}`) }) {
   const tokenFile = path.join(dataDir, 'frame-tv.json');
   let ws = null, opening = null, idle = null;
   let waiters = [];            // { event, resolve, reject, timer }
@@ -86,6 +86,7 @@ export function createFrameTv({ host, dataDir, matte = 'none', name = 'BeechHut'
     try { data = typeof msg.data === 'string' ? JSON.parse(msg.data) : msg.data; } catch { return; }
     if (!data?.event) return;
     if (data.event === 'error') {
+      log(`TV reported error ${data.error_code ?? 'unknown'} for ${data.request ?? 'a request'}`);
       const err = fail(`The Frame TV said no (error ${data.error_code ?? 'unknown'})`);
       for (const w of waiters.splice(0)) { clearTimeout(w.timer); w.reject(err); }
       return;
@@ -97,37 +98,73 @@ export function createFrameTv({ host, dataDir, matte = 'none', name = 'BeechHut'
     w.resolve(data);
   }
 
+  /**
+   * Open one of the TV's channels and wait until it's ready.
+   * Resolves with the socket and any token the TV handed out.
+   */
+  function channel(path, token, limit) {
+    const url = `wss://${host}:8002/api/v2/channels/${path}?name=${Buffer.from(name).toString('base64')}${token ? `&token=${encodeURIComponent(token)}` : ''}`;
+    const label = path.split('.').pop();
+    log(`connecting to ${label} channel${token ? ' with saved permission' : ''}`);
+    return new Promise((resolve, reject) => {
+      const sock = new WebSocket(url, { dispatcher: insecure });
+      let opened = false, connected = false, settled = false, got = null;
+      const timer = setTimeout(() => {
+        log(`${label} channel: no answer after ${limit / 1000} s (connection ${opened ? 'open' : 'never opened'})`);
+        done(opened ? fail(token
+          ? 'The Frame TV connected but didn’t reply. Turn it on (or to Art Mode) and try again.'
+          : 'The Frame TV didn’t ask for permission in time. Check its screen for a message asking to allow BeechHut, choose Allow and try again.', 504) : offline());
+      }, limit);
+      function done(err) {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        if (err) { try { sock.close(); } catch { /* */ } reject(err); } else resolve({ sock, token: got });
+      }
+      sock.onopen = () => { opened = true; log(`${label} channel: connection open, waiting for the TV`); };
+      sock.onmessage = (e) => {
+        if (settled) return;
+        let msg;
+        try { msg = JSON.parse(String(e.data)); } catch { return; }
+        log(`${label} channel: ${msg.event}`);
+        if (msg.event === 'ms.channel.connect') {
+          connected = true;
+          got = msg.data?.token || null;
+          // Art Mode follows up with ms.channel.ready on most Frames; some never do.
+          if (path === 'samsung.remote.control') done(); else setTimeout(() => done(), 1500);
+        } else if (msg.event === 'ms.channel.ready') done();
+        else if (msg.event === 'ms.channel.unauthorized') done(fail('The Frame TV didn’t allow BeechHut. On the TV, go to Settings → General → External Device Manager → Device Connection Manager → Device List, allow BeechHut (or delete it from the list) and try again.', 403));
+        else if (msg.event === 'ms.channel.timeOut') done(fail('The Frame TV’s permission message timed out. Try again and choose Allow on the TV.', 504));
+      };
+      sock.onerror = (e) => { if (!connected) { log(`${label} channel: connection failed (${e?.error?.message || e?.message || 'no details'})`); done(offline()); } };
+      sock.onclose = (e) => { if (!settled) { log(`${label} channel: closed by the TV (code ${e.code})`); done(offline()); } };
+    });
+  }
+
   function open() {
     if (ws && ws.readyState === WebSocket.OPEN) return Promise.resolve();
     if (opening) return opening;
     opening = (async () => {
-      const token = await readToken();
-      const url = `wss://${host}:8002/api/v2/channels/com.samsung.art-app?name=${Buffer.from(name).toString('base64')}${token ? `&token=${encodeURIComponent(token)}` : ''}`;
-      // Without a token the TV asks on screen to allow BeechHut, so give that time.
-      const limit = token ? 10_000 : 45_000;
-      await new Promise((resolve, reject) => {
-        const sock = new WebSocket(url, { dispatcher: insecure });
-        let connected = false;
-        const timer = setTimeout(() => { try { sock.close(); } catch { /* */ } reject(token ? offline() : fail('The Frame TV didn’t answer. If it showed a message asking to allow BeechHut, choose Allow and try again.', 503)); }, limit);
-        const done = (err) => { clearTimeout(timer); if (err) { try { sock.close(); } catch { /* */ } reject(err); } else { ws = sock; resolve(); } };
-        sock.onmessage = (e) => {
-          let msg;
-          try { msg = JSON.parse(String(e.data)); } catch { return; }
-          if (!ws) {
-            if (msg.event === 'ms.channel.connect') {
-              connected = true;
-              if (msg.data?.token && msg.data.token !== token) saveToken(msg.data.token).catch(() => {});
-              // Most Frames follow up with ms.channel.ready; some never do.
-              setTimeout(() => !ws && done(), 1500);
-            } else if (msg.event === 'ms.channel.ready') done();
-            else if (msg.event === 'ms.channel.unauthorized') done(fail('The Frame TV didn’t allow BeechHut. Try again and choose Allow on the TV.', 403));
-            return;
-          }
-          onMessage(e.data);
-        };
-        sock.onerror = () => !connected && done(offline());
-        sock.onclose = () => { if (ws === sock) close(); else if (!connected) done(offline()); };
-      });
+      let token = await readToken();
+      if (!token) {
+        // The TV only asks "Allow BeechHut?" for a remote-control connection, and the
+        // permission it gives there then works for Art Mode too.
+        const pair = await channel('samsung.remote.control', '', 60_000);
+        try { pair.sock.close(); } catch { /* */ }
+        if (pair.token) { token = pair.token; await saveToken(token); log('permission granted and saved'); }
+        else log('the TV didn’t hand out a permission token; carrying on without one');
+      }
+      let art;
+      try { art = await channel('com.samsung.art-app', token, 15_000); } catch (e) {
+        // Connected but silent with a saved permission: it may no longer be valid, so ask afresh next time.
+        if (e.statusCode === 504 && token) { await fs.rm(tokenFile, { force: true }); log('forgot the saved permission; the next try will ask the TV again'); }
+        throw e;
+      }
+      if (art.token && art.token !== token) await saveToken(art.token);
+      ws = art.sock;
+      ws.onmessage = (e) => onMessage(e.data);
+      ws.onclose = () => { log('Art Mode connection closed'); if (ws === art.sock) close(); };
+      ws.onerror = () => {};
     })().finally(() => { opening = null; });
     return opening;
   }

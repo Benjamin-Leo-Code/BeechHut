@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.1
+- Frame TV: BeechHut now asks the TV for permission the way a remote-control app does, which is what makes the **Allow** message appear on the TV. The permission is then used for Art Mode.
+- Clearer messages when the TV doesn't answer, and each step of connecting to the TV is written to the add-on's Log tab.
+
 ## 0.8.0
 - Photo uploader can now add photos to a **Samsung The Frame** TV's Art Mode (My Photos). Set **Frame TV address** on the Configuration tab; the first time, choose **Allow** on the TV.
 - Choose **Photo frame**, **Frame TV** or **Both** above the Add photos button. With Both, each photo is cropped twice: once for the frame's shape and once for the TV's 16:9.
