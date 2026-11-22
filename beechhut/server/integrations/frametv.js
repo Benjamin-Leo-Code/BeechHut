@@ -66,8 +66,9 @@ export function createFrameTv({ host, dataDir, matte = 'none', name = 'BeechHut'
   let chain = Promise.resolve(); // one request at a time, so answers can't get mixed up
   const thumbs = new Map();
 
-  const readToken = async () => { try { return JSON.parse(await fs.readFile(tokenFile, 'utf8')).token || ''; } catch { return ''; } };
-  const saveToken = async (token) => { await fs.mkdir(dataDir, { recursive: true }); await fs.writeFile(tokenFile, JSON.stringify({ token })); };
+  // What worked last time: the permission token (if the TV gave one) and the port.
+  const readSaved = async () => { try { return JSON.parse(await fs.readFile(tokenFile, 'utf8')); } catch { return {}; } };
+  const save = async (saved) => { await fs.mkdir(dataDir, { recursive: true }); await fs.writeFile(tokenFile, JSON.stringify(saved)); };
 
   function close() {
     clearTimeout(idle);
@@ -102,15 +103,17 @@ export function createFrameTv({ host, dataDir, matte = 'none', name = 'BeechHut'
    * Open one of the TV's channels and wait until it's ready.
    * Resolves with the socket and any token the TV handed out.
    */
-  function channel(path, token, limit) {
-    const url = `wss://${host}:8002/api/v2/channels/${path}?name=${Buffer.from(name).toString('base64')}${token ? `&token=${encodeURIComponent(token)}` : ''}`;
-    const label = path.split('.').pop();
-    log(`connecting to ${label} channel${token ? ' with saved permission' : ''}`);
+  function channel(path, token, limit, port) {
+    // 8002 is the encrypted port; 8001 the older plain one, which some Frames still answer on.
+    const scheme = port === 8001 ? 'ws' : 'wss';
+    const url = `${scheme}://${host}:${port}/api/v2/channels/${path}?name=${Buffer.from(name).toString('base64')}${token ? `&token=${encodeURIComponent(token)}` : ''}`;
+    const label = `${path.split('.').pop()} channel (port ${port})`;
+    log(`connecting to ${label}${token ? ' with saved permission' : ''}`);
     return new Promise((resolve, reject) => {
       const sock = new WebSocket(url, { dispatcher: insecure });
       let opened = false, connected = false, settled = false, got = null;
       const timer = setTimeout(() => {
-        log(`${label} channel: no answer after ${limit / 1000} s (connection ${opened ? 'open' : 'never opened'})`);
+        log(`${label}: no answer after ${limit / 1000} s (connection ${opened ? 'open' : 'never opened'})`);
         done(opened ? fail(token
           ? 'The Frame TV connected but didn’t reply. Turn it on (or to Art Mode) and try again.'
           : 'The Frame TV didn’t ask for permission in time. Check its screen for a message asking to allow BeechHut, choose Allow and try again.', 504) : offline());
@@ -121,12 +124,14 @@ export function createFrameTv({ host, dataDir, matte = 'none', name = 'BeechHut'
         clearTimeout(timer);
         if (err) { try { sock.close(); } catch { /* */ } reject(err); } else resolve({ sock, token: got });
       }
-      sock.onopen = () => { opened = true; log(`${label} channel: connection open, waiting for the TV`); };
+      sock.onopen = () => { opened = true; log(`${label}: connection open, waiting for the TV`); };
       sock.onmessage = (e) => {
         if (settled) return;
         let msg;
-        try { msg = JSON.parse(String(e.data)); } catch { return; }
-        log(`${label} channel: ${msg.event}`);
+        const text = String(e.data);
+        // Show exactly what the TV said (without the token), to help with odd models.
+        log(`${label}: received ${text.replace(/"token"\s*:\s*"[^"]*"/g, '"token":"…"').slice(0, 300)}`);
+        try { msg = JSON.parse(text); } catch { return; }
         if (msg.event === 'ms.channel.connect') {
           connected = true;
           got = msg.data?.token || null;
@@ -136,8 +141,8 @@ export function createFrameTv({ host, dataDir, matte = 'none', name = 'BeechHut'
         else if (msg.event === 'ms.channel.unauthorized') done(fail('The Frame TV didn’t allow BeechHut. On the TV, go to Settings → General → External Device Manager → Device Connection Manager → Device List, allow BeechHut (or delete it from the list) and try again.', 403));
         else if (msg.event === 'ms.channel.timeOut') done(fail('The Frame TV’s permission message timed out. Try again and choose Allow on the TV.', 504));
       };
-      sock.onerror = (e) => { if (!connected) { log(`${label} channel: connection failed (${e?.error?.message || e?.message || 'no details'})`); done(offline()); } };
-      sock.onclose = (e) => { if (!settled) { log(`${label} channel: closed by the TV (code ${e.code})`); done(offline()); } };
+      sock.onerror = (e) => { if (!connected) { log(`${label}: connection failed (${e?.error?.message || e?.message || 'no details'})`); done(offline()); } };
+      sock.onclose = (e) => { if (!settled) { log(`${label}: closed by the TV (code ${e.code})`); done(offline()); } };
     });
   }
 
@@ -145,22 +150,36 @@ export function createFrameTv({ host, dataDir, matte = 'none', name = 'BeechHut'
     if (ws && ws.readyState === WebSocket.OPEN) return Promise.resolve();
     if (opening) return opening;
     opening = (async () => {
-      let token = await readToken();
-      if (!token) {
-        // The TV only asks "Allow BeechHut?" for a remote-control connection, and the
-        // permission it gives there then works for Art Mode too.
-        const pair = await channel('samsung.remote.control', '', 60_000);
-        try { pair.sock.close(); } catch { /* */ }
-        if (pair.token) { token = pair.token; await saveToken(token); log('permission granted and saved'); }
-        else log('the TV didn’t hand out a permission token; carrying on without one');
+      const saved = await readSaved();
+      let { token = '', port } = saved;
+      if (!port) {
+        // First time: the TV asks "Allow BeechHut?" for a remote-control connection, and the
+        // permission it gives there then works for Art Mode too. Try the encrypted port, then
+        // the older plain one, which some Frames answer on instead.
+        let lastErr;
+        for (const p of [8002, 8001]) {
+          try {
+            const pair = await channel('samsung.remote.control', '', 30_000, p);
+            try { pair.sock.close(); } catch { /* */ }
+            token = pair.token || '';
+            port = p;
+            await save({ token, port });
+            log(`permission granted on port ${p}${token ? ' and saved' : ' (the TV didn’t need a token)'}`);
+            break;
+          } catch (e) {
+            lastErr = e;
+            if (e.statusCode === 403) throw e; // the TV said no; don't try another way round
+          }
+        }
+        if (!port) throw lastErr;
       }
       let art;
-      try { art = await channel('com.samsung.art-app', token, 15_000); } catch (e) {
-        // Connected but silent with a saved permission: it may no longer be valid, so ask afresh next time.
-        if (e.statusCode === 504 && token) { await fs.rm(tokenFile, { force: true }); log('forgot the saved permission; the next try will ask the TV again'); }
+      try { art = await channel('com.samsung.art-app', token, 15_000, port); } catch (e) {
+        // Connected but silent with saved settings: they may no longer be valid, so start afresh next time.
+        if (e.statusCode === 504) { await fs.rm(tokenFile, { force: true }); log('forgot the saved permission; the next try will ask the TV again'); }
         throw e;
       }
-      if (art.token && art.token !== token) await saveToken(art.token);
+      if (art.token && art.token !== token) await save({ token: art.token, port });
       ws = art.sock;
       ws.onmessage = (e) => onMessage(e.data);
       ws.onclose = () => { log('Art Mode connection closed'); if (ws === art.sock) close(); };

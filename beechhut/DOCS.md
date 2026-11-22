@@ -133,7 +133,7 @@ Things to know:
 - The TV has to be on, or in Art Mode, to receive photos. When it's fully off, the page says it isn't answering.
 - Samsung doesn't document this connection; BeechHut uses the same one as the open-source `samsungtvws` library. A TV software update could change it.
 - If you reset the TV or remove BeechHut from its list of connected devices, choose **Allow** again next time.
-- If the Allow message never appears, check the TV's **Settings → General → External Device Manager → Device Connection Manager**: **Access Notification** should be on (e.g. *First Time Only*), and BeechHut mustn't be set to *Deny* in **Device List**. Each step of connecting is written to the add-on's **Log** tab.
+- If the Allow message never appears, make sure **IP Remote** is on (Settings → General → Network → Expert Settings), and check the TV's **Settings → General → External Device Manager → Device Connection Manager**: **Access Notification** should be on (e.g. *First Time Only*), and BeechHut mustn't be set to *Deny* in **Device List**. Each step of connecting is written to the add-on's **Log** tab.
 
 ### Advanced
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.1
+- Frame TV: if the TV doesn't answer on its encrypted port (8002), BeechHut now tries the older port (8001), which some Frames use instead, and remembers whichever works.
+- The add-on's Log tab now shows exactly what the TV sends back, to help track down problems.
+
 ## 0.9.0
 - **Frame TV Art Mode button in Home Assistant.** BeechHut adds a button helper, `input_button.frame_tv_art_mode`, that switches the Frame TV to Art Mode (like the Off button on its remote). Put it on a dashboard or use it in automations. If the TV can't be reached, a notification in Home Assistant says why. Turn it off with **Frame TV Art Mode button** on the Configuration tab.
 - An **Art Mode** button on the Photo uploader page does the same.
