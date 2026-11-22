@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.0
+- Removed Samsung The Frame support: the Frame TV options in Photo uploader, the Art Mode buttons and the Frame TV settings are gone. Photo uploader is back to adding photos to the photo frame only.
+- If you'd turned it on, delete the **Frame TV Art Mode** button helper in Home Assistant (Settings → Devices & services → Helpers); BeechHut no longer uses it.
+
 ## 0.9.3
 - Frame TV: before asking for permission, BeechHut writes the TV's own description of itself to the Log tab (model, whether remote control is on, and so on), to help track down connection problems.
 

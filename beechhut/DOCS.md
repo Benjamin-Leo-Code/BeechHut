@@ -104,37 +104,6 @@ Set it up on the Configuration tab:
 
 BeechHut saves each photo straight into the folder as `YYYY-MM-DD-HHMMSS-<random>.jpg`, so names sort newest first and can't be guessed (anything in `www` can be read at `/local/…` without logging in). If the folder is also listed under `homeassistant: media_dirs:`, the photos appear in Home Assistant's media browser as usual; nothing else needs to change.
 
-### Samsung The Frame
-
-Photo uploader can also add photos to a Samsung The Frame TV's Art Mode, under **My Photos**. Photos are cropped to 16:9 and sent at up to 3840 pixels across (4K).
-
-1. Give the TV a fixed IP address: reserve it in your router (in UniFi, open the TV under Client Devices and turn on **Fixed IP Address**).
-2. Set **Frame TV address** on the Configuration tab to that IP address, and restart BeechHut.
-3. With the TV on, open Photo uploader. The TV shows a message asking whether to allow **BeechHut**: choose **Allow**. You only need to do this once.
-
-When both the photo frame and the TV are set up, choose **Photo frame**, **Frame TV** or **Both** above the Add photos button. With **Both**, each photo is cropped twice, once for each shape. **On the Frame TV** shows your own photos on the TV (not Art Store pieces) and marks the one showing; tap one to **Show now** or **Delete** it.
-
-| Option | What it does |
-| --- | --- |
-| Frame TV address | The TV's IP address. Leave blank if you don't have one |
-| Frame TV Art Mode button | Adds the Art Mode button to Home Assistant (see below). On unless you turn it off |
-| Frame TV mat | The border Art Mode puts round uploaded photos, using Samsung's names, e.g. `shadowbox_polar` or `modern_apricot`. Leave blank for none |
-
-#### Art Mode button
-
-BeechHut adds a **Frame TV Art Mode** button helper to Home Assistant (`input_button.frame_tv_art_mode`). Pressing it switches the TV to Art Mode, like the Off button on the TV's remote; if it's already in Art Mode, nothing changes. Put it on a dashboard, press it from the Home Assistant app, or use it in an automation (action: **Input button: Press**). The **Art Mode** button on the Photo uploader page does the same.
-
-- BeechHut passes the press on to the TV, so it only works while BeechHut is running.
-- If the TV can't be reached (for example, it's fully switched off), a notification in Home Assistant says so.
-- If Home Assistant won't let BeechHut create the helper, the add-on's Log tab says so. Create a **Button** helper called *Frame TV Art Mode* yourself (Settings → Devices & services → Helpers) and BeechHut will use it.
-
-Things to know:
-
-- The TV has to be on, or in Art Mode, to receive photos. When it's fully off, the page says it isn't answering.
-- Samsung doesn't document this connection; BeechHut uses the same one as the open-source `samsungtvws` library. A TV software update could change it.
-- If you reset the TV or remove BeechHut from its list of connected devices, choose **Allow** again next time.
-- If the Allow message never appears, make sure **IP Remote** is on (Settings → General → Network → Expert Settings), and check the TV's **Settings → General → External Device Manager → Device Connection Manager**: **Access Notification** should be on (e.g. *First Time Only*), and BeechHut mustn't be set to *Deny* in **Device List**. Each step of connecting is written to the add-on's **Log** tab.
-
 ### Advanced
 
 For anything the Configuration tab doesn't cover, such as overriding a container's link or grouping links in YAML, create `config.yaml` in this add-on's config folder: `/addon_configs/<id>_beechhut/` on the host, which the File editor or Studio Code Server add-on can reach. See `config.example.yaml` in the repository.
@@ -144,6 +113,5 @@ For anything the Configuration tab doesn't cover, such as overriding a container
 - BeechHut only accepts connections through Home Assistant (ingress), so it uses your HA login. If you can reach HA remotely, e.g. through Nabu Casa, you can reach BeechHut too.
 - Only Home Assistant **administrators** should see it in the sidebar, because it can stop containers and reboot VMs. Panels for add-ons with ingress are admin-only by default.
 - Notes are stored in the add-on's own storage and included in Home Assistant backups.
-- The Frame TV's permission token is kept in the add-on's own storage.
 - BeechHut can read and write Home Assistant's config folder, so that Photo uploader can save photos to the frame's folder. It only ever touches photos in that one folder.
 - Because it runs inside Home Assistant, it's unavailable while HA is down or restarting. Rebooting the Home Assistant VM from the Server page works, but the console will drop out until HA is back.

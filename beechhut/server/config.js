@@ -91,7 +91,6 @@ export function loadConfig() {
     } : null,
     homeassistant: haUrl && haToken ? {
       url: haUrl,
-      wsUrl: process.env.BEECHHUT_HA_WS || `${haUrl.replace(/^http/, 'ws')}${ADDON ? '/websocket' : '/api/websocket'}`,
       token: haToken,
       vmName: pick(o.ha_vm_name, y.homeassistant?.vmName) || 'Home Assistant',
       lowBattery: Number(pick(o.low_battery, y.homeassistant?.lowBattery) ?? 20),
@@ -117,17 +116,6 @@ export function loadConfig() {
       dir: photoFrameDir(process.env.BEECHHUT_PHOTO_FRAME_FOLDER || pick(o.photo_frame_folder, y.photo_frame?.folder)),
       aspect: aspectOf(pick(o.photo_frame_shape, y.photo_frame?.shape)),
     },
-    // Samsung The Frame: its address on the network (an IP address is best) and the mat for uploads.
-    frameTv: (() => {
-      const host = String(process.env.BEECHHUT_FRAME_TV || pick(o.frame_tv_address, y.frame_tv?.address) || '')
-        .trim().replace(/^[a-z]+:\/\//i, '').replace(/[:/].*$/, '');
-      return host ? {
-        host,
-        matte: String(pick(o.frame_tv_matte, y.frame_tv?.matte) || 'none').trim(),
-        // Make an input_button in Home Assistant that switches the TV to Art Mode.
-        haButton: pick(o.frame_tv_art_mode_button, y.frame_tv?.artModeButton) !== false,
-      } : null;
-    })(),
     links: !blank(o.links) ? groupLinks(o.links) : Array.isArray(y.links) ? y.links : [],
   };
 }

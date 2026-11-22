@@ -12,8 +12,6 @@ export interface Meta {
   housePlanUrl: string;
   /** Set when Photo uploader is set up; aspect is the frame's width ÷ height. */
   photoFrame: { aspect: number } | null;
-  /** Set when a Samsung The Frame TV is set up. */
-  frameTv: { aspect: number } | null;
 }
 
 export interface Container {
@@ -76,5 +74,3 @@ export interface Overview {
     network: Tile<{ devicesOnline: number; devices: number; clients: number; wireless: number; gateway: UnifiDevice | null }>;
   };
 }
-
-export interface FrameTvPhoto { id: string; showing: boolean }

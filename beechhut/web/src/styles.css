@@ -477,9 +477,3 @@ table.disks { width: 100%; border-collapse: collapse; font-size: 14px; }
   .crop-dialog footer { padding-left: 16px; padding-right: 16px; }
 }
 .photo-queue .row-title strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.photo-dest { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.photo-dest .segmented { flex: 1; max-width: 420px; }
-.photo-dest .segmented button { flex: 1; }
-.photo-badge { position: absolute; left: 6px; bottom: 6px; padding: 3px 9px; border-radius: 99px; background: var(--accent); color: var(--accent-text); font-size: 12px; font-weight: 600; pointer-events: none; }
-.photo-tv-error { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
-.photo-tv-error .error-note { align-self: stretch; }
