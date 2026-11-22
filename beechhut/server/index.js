@@ -12,6 +12,7 @@ import { createLinks } from './integrations/links.js';
 import { createNotes } from './integrations/notes.js';
 import { createPhotos, createDemoPhotos } from './integrations/photos.js';
 import { createFrameTv, createDemoFrameTv } from './integrations/frametv.js';
+import { createHaButton } from './integrations/habutton.js';
 import { demo, demoLinks } from './demo.js';
 import { buildOverview } from './overview.js';
 
@@ -33,6 +34,16 @@ const photos = config.demo ? createDemoPhotos(config.photoFrame.aspect)
   : config.photoFrame.dir ? createPhotos(config.photoFrame.dir) : null;
 const frameTv = config.demo ? createDemoFrameTv()
   : config.frameTv ? createFrameTv({ host: config.frameTv.host, matte: config.frameTv.matte, dataDir: DATA_DIR }) : null;
+
+// A "Frame TV Art Mode" button in Home Assistant, for dashboards and automations.
+if (!config.demo && frameTv && config.frameTv.haButton && config.homeassistant) {
+  createHaButton({
+    wsUrl: config.homeassistant.wsUrl, token: config.homeassistant.token,
+    objectId: 'frame_tv_art_mode', name: 'Frame TV Art Mode', icon: 'mdi:image-frame',
+    onPress: () => frameTv.artMode(),
+    log: (m) => console.log(`[Frame TV] ${m}`),
+  });
+}
 
 function demoLinkStore() {
   const store = createLinks(demoLinks.map((g) => ({ ...g, items: g.items.map((l) => ({ ...l, check: false })) })));
@@ -167,6 +178,7 @@ const jpegBody = (req) => {
 app.get('/api/frametv', async () => need(frameTv, 'The Frame TV').list());
 app.post('/api/frametv', UPLOAD, async (req) => need(frameTv, 'The Frame TV').add(jpegBody(req)));
 app.delete('/api/frametv/:id', async (req) => { await need(frameTv, 'The Frame TV').remove(req.params.id); return { ok: true }; });
+app.post('/api/frametv/art-mode', async () => { await need(frameTv, 'The Frame TV').artMode(); return { ok: true }; });
 app.post('/api/frametv/:id/show', async (req) => { await need(frameTv, 'The Frame TV').show(req.params.id); return { ok: true }; });
 app.get('/api/frametv/:id/thumbnail', async (req, reply) => {
   const t = await need(frameTv, 'The Frame TV').thumbnail(req.params.id);

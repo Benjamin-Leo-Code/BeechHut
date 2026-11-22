@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ImagePlus, Crop, Trash2, X, Tv, RefreshCw } from 'lucide-react';
+import { ImagePlus, Crop, Trash2, X, Tv, RefreshCw, Frame } from 'lucide-react';
 import { api, useApi } from '../api';
 import { Button, Card, Empty, ErrorNote, Loading, Modal, Segmented, confirm } from '../ui';
 import { cropPhoto } from './crop';
@@ -169,6 +169,16 @@ export function PhotosPage({ meta }: { meta: Meta }) {
     tv.refresh();
   }
 
+  async function artMode() {
+    setNotice({ text: 'Switching the Frame TV to Art Mode…' });
+    try {
+      await api(`${TV_KEY}/art-mode`, { method: 'POST' });
+      setNotice({ text: 'The Frame TV is in Art Mode.', tone: 'ok' });
+    } catch (e) {
+      setNotice({ text: `Couldn’t switch to Art Mode: ${(e as Error).message}`, tone: 'bad' });
+    }
+  }
+
   const intro = both ? 'Photos added here go in the photo frame, the Frame TV’s Art Mode, or both. Each one is cropped to fit first.'
     : targets.tv ? 'Photos added here go in the Frame TV’s Art Mode, under My Photos. Each one is cropped to fit first.'
     : 'Photos added here go in the photo frame, one at a time. They show up there within a couple of minutes.';
@@ -243,7 +253,10 @@ export function PhotosPage({ meta }: { meta: Meta }) {
           {tv.loading && !tv.error && <Loading rows={2} />}
           {tv.data && (
             <Card title={`On the Frame TV (${tv.data.length})`} icon={<Tv size={16} />}
-              actions={<Button small variant="ghost" icon={<RefreshCw size={14} />} title="Refresh" onClick={() => tv.refresh()} />}>
+              actions={<>
+                <Button small icon={<Frame size={14} />} onClick={artMode}>Art Mode</Button>
+                <Button small variant="ghost" icon={<RefreshCw size={14} />} title="Refresh" onClick={() => tv.refresh()} />
+              </>}>
               {tv.data.length === 0 ? <Empty>None of your own photos are on the TV yet: add some above.</Empty> : (
                 <div className="photo-grid" style={{ ['--photo-aspect' as string]: String(targets.tv.aspect) }}>
                   {tv.data.map((p) => (

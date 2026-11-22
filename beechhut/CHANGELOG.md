@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.0
+- **Frame TV Art Mode button in Home Assistant.** BeechHut adds a button helper, `input_button.frame_tv_art_mode`, that switches the Frame TV to Art Mode (like the Off button on its remote). Put it on a dashboard or use it in automations. If the TV can't be reached, a notification in Home Assistant says why. Turn it off with **Frame TV Art Mode button** on the Configuration tab.
+- An **Art Mode** button on the Photo uploader page does the same.
+
 ## 0.8.1
 - Frame TV: BeechHut now asks the TV for permission the way a remote-control app does, which is what makes the **Allow** message appear on the TV. The permission is then used for Art Mode.
 - Clearer messages when the TV doesn't answer, and each step of connecting to the TV is written to the add-on's Log tab.

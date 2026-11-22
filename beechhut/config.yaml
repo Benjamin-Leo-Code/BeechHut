@@ -1,5 +1,5 @@
 name: BeechHut
-version: "0.8.1"
+version: "0.9.0"
 slug: beechhut
 description: Admin console for the house – Unraid, Home Assistant and UniFi in one place
 url: https://github.com/Benjamin-Leo-Code/BeechHut
@@ -68,3 +68,4 @@ schema:
   photo_frame_shape: str?
   frame_tv_address: str?
   frame_tv_matte: str?
+  frame_tv_art_mode_button: bool?

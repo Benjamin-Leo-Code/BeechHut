@@ -249,6 +249,13 @@ export function createFrameTv({ host, dataDir, matte = 'none', name = 'BeechHut'
       send({ request: 'select_image', content_id: id, category_id: null, show: true });
       await selected.catch(() => {}); // not every Frame confirms
     }),
+    /** Switch the TV to Art Mode (does nothing if it's already there). */
+    artMode: () => session(async () => {
+      log('switching to Art Mode');
+      const answer = waitFor('artmode_status', 5000);
+      send({ request: 'set_artmode_status', value: 'on' });
+      await answer.catch(() => {}); // not every Frame confirms
+    }),
     thumbnail: async (id) => {
       checkId(id);
       if (thumbs.has(id)) return thumbs.get(id);
@@ -278,6 +285,7 @@ export function createDemoFrameTv() {
     async add(jpeg) { await pause(); const id = `MY_F${String(next++).padStart(4, '0')}`; store.set(id, { type: 'image/jpeg', body: jpeg }); return { id }; },
     async remove(id) { store.delete(id); },
     async show(id) { checkId(id); showing = id; },
+    async artMode() { await pause(); },
     async thumbnail(id) { const t = store.get(id); if (!t) throw fail('That isn’t a photo on the Frame TV', 404); return t; },
   };
 }
