@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.9.2
+- Frame TV: BeechHut now connects to the TV the same way the open-source samsungtvws library does (without asking for compression), in case the TV ignores connections that ask for it.
+
 ## 0.9.1
 - Frame TV: if the TV doesn't answer on its encrypted port (8002), BeechHut now tries the older port (8001), which some Frames use instead, and remembers whichever works.
 - The add-on's Log tab now shows exactly what the TV sends back, to help track down problems.

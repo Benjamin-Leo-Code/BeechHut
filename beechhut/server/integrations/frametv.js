@@ -3,7 +3,9 @@ import path from 'node:path';
 import net from 'node:net';
 import tls from 'node:tls';
 import crypto from 'node:crypto';
-import { Agent, WebSocket } from 'undici';
+// The ws library rather than undici's WebSocket, so the connection can be made without
+// asking for compression, the same way the samsungtvws library connects.
+import WebSocket from 'ws';
 
 /*
  * Samsung The Frame: Art Mode over the TV's local WebSocket API (port 8002).
@@ -16,7 +18,6 @@ import { Agent, WebSocket } from 'undici';
 const MY_PHOTOS = 'MY-C0002';
 const SAFE_ID = /^[A-Za-z0-9_-]{1,64}$/;
 const IDLE_CLOSE = 60_000;
-const insecure = new Agent({ connect: { rejectUnauthorized: false } });
 
 const fail = (message, statusCode = 502) => Object.assign(new Error(message), { statusCode });
 const offline = () => fail('The Frame TV isn’t answering. It needs to be on, or in Art Mode, and on the network.', 503);
@@ -110,7 +111,7 @@ export function createFrameTv({ host, dataDir, matte = 'none', name = 'BeechHut'
     const label = `${path.split('.').pop()} channel (port ${port})`;
     log(`connecting to ${label}${token ? ' with saved permission' : ''}`);
     return new Promise((resolve, reject) => {
-      const sock = new WebSocket(url, { dispatcher: insecure });
+      const sock = new WebSocket(url, { perMessageDeflate: false, rejectUnauthorized: false, handshakeTimeout: 10_000 });
       let opened = false, connected = false, settled = false, got = null;
       const timer = setTimeout(() => {
         log(`${label}: no answer after ${limit / 1000} s (connection ${opened ? 'open' : 'never opened'})`);
