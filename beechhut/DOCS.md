@@ -88,6 +88,22 @@ BeechHut checks `plan.json` for changes every couple of minutes while the page i
 | `rotation` | Degrees anticlockwise, seen from above |
 | `unitScale` | Turns the file's units into metres. Magicplan's USDZ needs `10`. If you leave it out, BeechHut picks a sensible size itself |
 
+### Photo uploader
+
+The Photo uploader page adds photos to a digital photo frame (any slideshow that shows a folder of photos) and manages the ones already there. It's laid out for a phone.
+
+- **Add photos** lets you pick several photos at once. Each one is cropped on the phone to the frame's exact shape: drag to move it, pinch, scroll or use the slider to zoom, then tap **Add**. **Cancel** skips that photo. The cropped photo is at most 1920 pixels across, so uploads are quick.
+- **In the frame** shows every photo in the folder, newest first. Tap one to see it large, **Crop** it again or **Delete** it, or use the × on a thumbnail. Deleting asks first.
+
+Set it up on the Configuration tab:
+
+| Option | What it does |
+| --- | --- |
+| Photo frame folder | The folder the frame shows, inside Home Assistant's config folder, e.g. `/config/www/photo-frame`. `www/photo-frame` and `/local/photo-frame` mean the same. Create the folder first. Leave blank to hide the page |
+| Photo frame shape | The frame's width:height, e.g. `16:9` or `4:3`. Leave blank for `238:162` |
+
+BeechHut saves each photo straight into the folder as `YYYY-MM-DD-HHMMSS-<random>.jpg`, so names sort newest first and can't be guessed (anything in `www` can be read at `/local/…` without logging in). If the folder is also listed under `homeassistant: media_dirs:`, the photos appear in Home Assistant's media browser as usual; nothing else needs to change.
+
 ### Advanced
 
 For anything the Configuration tab doesn't cover, such as overriding a container's link or grouping links in YAML, create `config.yaml` in this add-on's config folder: `/addon_configs/<id>_beechhut/` on the host, which the File editor or Studio Code Server add-on can reach. See `config.example.yaml` in the repository.
@@ -97,4 +113,5 @@ For anything the Configuration tab doesn't cover, such as overriding a container
 - BeechHut only accepts connections through Home Assistant (ingress), so it uses your HA login. If you can reach HA remotely, e.g. through Nabu Casa, you can reach BeechHut too.
 - Only Home Assistant **administrators** should see it in the sidebar, because it can stop containers and reboot VMs. Panels for add-ons with ingress are admin-only by default.
 - Notes are stored in the add-on's own storage and included in Home Assistant backups.
+- BeechHut can read and write Home Assistant's config folder, so that Photo uploader can save photos to the frame's folder. It only ever touches photos in that one folder.
 - Because it runs inside Home Assistant, it's unavailable while HA is down or restarting. Rebooting the Home Assistant VM from the Server page works, but the console will drop out until HA is back.

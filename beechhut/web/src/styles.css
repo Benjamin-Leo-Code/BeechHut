@@ -427,3 +427,53 @@ table.disks { width: 100%; border-collapse: collapse; font-size: 14px; }
   .plan-stage { height: calc(100dvh - 230px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); min-height: 300px; }
   .plan-hint { display: none; }
 }
+
+/* ── Photo uploader ──────────────────────────────────────────────────── */
+.photo-add { position: relative; width: 100%; height: 56px; font-size: 16px; font-weight: 600; cursor: pointer; }
+.photo-add.disabled { opacity: 0.5; cursor: default; }
+.photo-add input { position: absolute; inset: 0; opacity: 0; width: 100%; cursor: inherit; }
+.photo-add input:disabled { pointer-events: none; }
+.photo-add:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.photo-notice-empty { display: none; }
+.photo-notice { padding: 10px 14px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border); font-size: 14px; font-weight: 500; }
+.photo-notice-ok { background: color-mix(in srgb, var(--ok) 12%, var(--surface)); border-color: color-mix(in srgb, var(--ok) 35%, var(--border)); color: var(--ok); }
+.photo-notice-bad { background: color-mix(in srgb, var(--bad) 10%, var(--surface)); border-color: color-mix(in srgb, var(--bad) 35%, var(--border)); color: var(--bad); }
+.photo-queue img { width: 44px; height: 44px; object-fit: cover; border-radius: 8px; flex: none; background: var(--surface-2); }
+.photo-queue .row-main { min-width: 0; }
+.photo-added { color: var(--ok); font-weight: 500; }
+.photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.photo-tile { position: relative; }
+.photo-thumb { display: block; width: 100%; aspect-ratio: var(--photo-aspect, 1.47); padding: 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--surface-2); cursor: pointer; }
+.photo-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.photo-thumb:active { transform: scale(0.98); }
+.photo-delete {
+  position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; display: grid; place-items: center; padding: 0;
+  border: 0; border-radius: 99px; background: rgb(20 22 19 / 0.6); color: #fff; cursor: pointer; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+}
+.photo-delete:hover { background: var(--bad); }
+.photo-large { display: block; width: 100%; max-height: 70vh; object-fit: contain; border-radius: 10px; background: var(--surface-2); }
+
+.crop-dialog {
+  width: 100vw; height: 100vh; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0;
+  background: var(--surface); color: var(--text); overscroll-behavior: contain;
+}
+.crop-dialog[open] { display: flex; flex-direction: column; }
+.crop-dialog::backdrop { background: rgb(0 0 0 / 0.6); }
+.crop-dialog header { padding: calc(env(safe-area-inset-top) + 14px) 20px 10px; text-align: center; }
+.crop-dialog header h2 { font-size: 17px; font-weight: 600; }
+.crop-stage { position: relative; flex: 1; min-height: 0; overflow: hidden; background: #111; touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab; }
+.crop-stage:active { cursor: grabbing; }
+.crop-stage img { position: absolute; top: 0; left: 0; max-width: none; transform-origin: 0 0; pointer-events: none; }
+.crop-window { position: absolute; box-shadow: 0 0 0 100vmax rgb(0 0 0 / 0.6); outline: 2px solid rgb(255 255 255 / 0.9); pointer-events: none; }
+.crop-loading { position: absolute; inset: 0; display: grid; place-items: center; color: #ddd; }
+.crop-zoom { display: flex; align-items: center; gap: 12px; padding: 14px 24px 4px; color: var(--muted); }
+.crop-zoom input { flex: 1; accent-color: var(--accent); }
+.crop-dialog footer { display: flex; gap: 8px; justify-content: flex-end; padding: 10px 20px calc(env(safe-area-inset-bottom) + 14px); }
+.crop-dialog footer .btn { min-width: 84px; height: 42px; justify-content: center; }
+.crop-dialog footer .btn-ghost { margin-right: auto; }
+@media (max-width: 760px) {
+  .photo-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .crop-zoom { padding: 12px 18px 2px; }
+  .crop-dialog footer { padding-left: 16px; padding-right: 16px; }
+}
+.photo-queue .row-title strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

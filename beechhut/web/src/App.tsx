@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import {
-  LayoutGrid, Boxes, Server, House, Network, Link2, NotebookPen, Search, MoreHorizontal, Command, Box,
+  LayoutGrid, Boxes, Server, House, Network, Link2, NotebookPen, Search, MoreHorizontal, Command, Box, Images,
 } from 'lucide-react';
 import { useApi } from './api';
 import { navigate, useRoute } from './router';
@@ -14,6 +14,7 @@ import { HomePage } from './pages/Home';
 import { NetworkPage } from './pages/Network';
 import { LinksPage } from './pages/Links';
 import { NotesPage } from './pages/Notes';
+import { PhotosPage } from './pages/Photos';
 
 // The 3D viewer pulls in three.js, so it's only downloaded when you open the page.
 const HousePlanPage = lazy(() => import('./pages/HousePlan'));
@@ -25,13 +26,14 @@ export const NAV: { page: Page; label: string; icon: ReactNode; mobile?: boolean
   { page: 'home', label: 'Home', icon: <House size={20} />, mobile: true },
   { page: 'network', label: 'Network', icon: <Network size={20} />, mobile: true },
   { page: 'plan', label: 'House Plan', icon: <Box size={20} /> },
+  { page: 'photos', label: 'Photo uploader', icon: <Images size={20} /> },
   { page: 'links', label: 'Links', icon: <Link2 size={20} /> },
   { page: 'notes', label: 'Notes', icon: <NotebookPen size={20} /> },
 ];
 
 const PAGES: Record<Page, (p: { meta: Meta }) => ReactNode> = {
   overview: OverviewPage, containers: ContainersPage, server: ServerPage, home: HomePage,
-  network: NetworkPage, plan: HousePlanPage, links: LinksPage, notes: NotesPage,
+  network: NetworkPage, plan: HousePlanPage, photos: PhotosPage, links: LinksPage, notes: NotesPage,
 };
 
 export function App() {
@@ -60,7 +62,8 @@ export function App() {
   const Current = PAGES[page];
   const enabled = (p: Page) =>
     !(['containers', 'server'].includes(p) && !meta.integrations.unraid) &&
-    !(p === 'home' && !meta.integrations.homeassistant) && !(p === 'network' && !meta.integrations.unifi);
+    !(p === 'home' && !meta.integrations.homeassistant) && !(p === 'network' && !meta.integrations.unifi) &&
+    !(p === 'photos' && !meta.photoFrame);
   const nav = NAV.filter((n) => enabled(n.page));
   const mobileNav = nav.filter((n) => n.mobile);
   const isMac = /Mac|iPhone|iPad/.test(navigator.platform);

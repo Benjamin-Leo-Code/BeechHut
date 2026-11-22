@@ -1,5 +1,5 @@
 export type Level = 'alert' | 'warning' | 'info';
-export type Page = 'overview' | 'containers' | 'server' | 'home' | 'network' | 'plan' | 'links' | 'notes';
+export type Page = 'overview' | 'containers' | 'server' | 'home' | 'network' | 'plan' | 'photos' | 'links' | 'notes';
 
 export interface Meta {
   title: string;
@@ -10,6 +10,8 @@ export interface Meta {
   webUrls: { unraid: string | null; unifi: string | null };
   haVmName: string;
   housePlanUrl: string;
+  /** Set when Photo uploader is set up; aspect is the frame's width ÷ height. */
+  photoFrame: { aspect: number } | null;
 }
 
 export interface Container {

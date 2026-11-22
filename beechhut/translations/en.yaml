@@ -44,6 +44,12 @@ configuration:
   house_plan_url:
     name: House plan address
     description: Where the house plan folder (plan.json and its scans) is served from, e.g. /local/my-folder/house-plan/ for a folder in Home Assistant's www folder. Leave blank to hide the plan.
+  photo_frame_folder:
+    name: Photo frame folder
+    description: The folder in Home Assistant's config folder that the photo frame shows, e.g. /config/www/photo-frame. Photo uploader adds photos here. Leave blank to hide Photo uploader.
+  photo_frame_shape:
+    name: Photo frame shape
+    description: The frame's width:height, e.g. 16:9. Photos are cropped to this shape. Leave blank for 238:162.
   links:
     name: Links
     description: Bookmarks. Icon is a name from dashboardicons.com (e.g. plex) or an image URL. Pinned links go in Quick launch.

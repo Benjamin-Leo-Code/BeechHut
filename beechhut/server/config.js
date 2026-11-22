@@ -8,6 +8,8 @@ export const ADDON = Boolean(process.env.SUPERVISOR_TOKEN);
 const OPTIONS_PATH = process.env.BEECHHUT_OPTIONS || '/data/options.json';
 // Optional advanced config: /addon_configs/<slug>/config.yaml on the HA host (mounted at /config).
 const CONFIG_PATH = path.resolve(process.env.BEECHHUT_CONFIG || (ADDON ? '/config/config.yaml' : 'config.yaml'));
+// Home Assistant's own config folder (mapped in as homeassistant_config).
+const HA_CONFIG_DIR = path.resolve(process.env.BEECHHUT_HA_CONFIG || (ADDON ? '/homeassistant' : 'ha-config'));
 export const DATA_DIR = path.resolve(process.env.BEECHHUT_DATA || (ADDON ? '/data' : 'data'));
 
 /** Replace ${VAR} and ${VAR:-default} with environment values, recursively. */
@@ -28,6 +30,27 @@ const trimSlash = (u) => (u ? String(u).replace(/\/+$/, '') : u);
 const blank = (v) => v === undefined || v === null || v === '' || (Array.isArray(v) && !v.length);
 /** First non-blank value. */
 const pick = (...vals) => vals.find((v) => !blank(v));
+
+/**
+ * The photo frame folder, written the way Home Assistant users see it:
+ * /config/www/photo-frame, www/photo-frame or /local/photo-frame all mean the same folder.
+ * It has to be inside Home Assistant's config folder.
+ */
+function photoFrameDir(value) {
+  let v = String(value || '').trim().replace(/\\/g, '/');
+  if (!v) return null;
+  v = v.replace(/^\/(config|homeassistant)(\/|$)/, '').replace(/^\/local(\/|$)/, 'www/').replace(/^\/+/, '');
+  const dir = path.resolve(HA_CONFIG_DIR, v);
+  if (dir !== HA_CONFIG_DIR && !dir.startsWith(HA_CONFIG_DIR + path.sep)) return null;
+  return dir === HA_CONFIG_DIR ? null : dir;
+}
+
+/** Frame shape as width:height (e.g. 238:162 or 3:2) or a single ratio (1.47). */
+function aspectOf(value, fallback = 238 / 162) {
+  const m = String(value || '').trim().match(/^(\d+(?:\.\d+)?)\s*(?:[:x×/]\s*(\d+(?:\.\d+)?))?$/i);
+  const r = m ? Number(m[1]) / (m[2] ? Number(m[2]) : 1) : NaN;
+  return r > 0.2 && r < 5 ? r : fallback;
+}
 
 /** Flat add-on `links` option (each with an optional group) → grouped links. */
 function groupLinks(flat = []) {
@@ -88,6 +111,11 @@ export function loadConfig() {
       const url = String(process.env.BEECHHUT_HOUSE_PLAN_URL || pick(o.house_plan_url, y.house_plan?.url) || '').trim();
       return url ? url.replace(/\/*$/, '/') : '';
     })(),
+    // Photos for the photo frame: a folder in Home Assistant's config folder (usually under www).
+    photoFrame: {
+      dir: photoFrameDir(process.env.BEECHHUT_PHOTO_FRAME_FOLDER || pick(o.photo_frame_folder, y.photo_frame?.folder)),
+      aspect: aspectOf(pick(o.photo_frame_shape, y.photo_frame?.shape)),
+    },
     links: !blank(o.links) ? groupLinks(o.links) : Array.isArray(y.links) ? y.links : [],
   };
 }

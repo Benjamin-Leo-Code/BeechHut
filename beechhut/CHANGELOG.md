@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.0
+- New **Photo uploader** page for a digital photo frame. Add photos from your phone, each cropped to the frame's exact shape first (drag to move, pinch or use the slider to zoom), and see, re-crop or delete the photos already in the frame.
+- Set **Photo frame folder** on the Configuration tab (e.g. `/config/www/photo-frame`), and **Photo frame shape** if your frame isn't 238:162. The page is hidden until the folder is set.
+- BeechHut can now read and write Home Assistant's config folder, so it can save photos to the frame's folder.
+
 ## 0.6.0
 - The house plan is now loaded straight from a folder served by Home Assistant, e.g. `/local/<folder>/house-plan/` in the `www` folder. The GitHub settings and token are gone; set **House plan address** on the Configuration tab instead.
 

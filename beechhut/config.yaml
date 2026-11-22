@@ -1,5 +1,5 @@
 name: BeechHut
-version: "0.6.0"
+version: "0.7.0"
 slug: beechhut
 description: Admin console for the house – Unraid, Home Assistant and UniFi in one place
 url: https://github.com/Benjamin-Leo-Code/BeechHut
@@ -19,6 +19,9 @@ homeassistant_api: true
 map:
   - type: addon_config
     read_only: false
+  # Photo uploader: the photo frame's folder lives in Home Assistant's config folder.
+  - type: homeassistant_config
+    read_only: false
 options:
   title: Beech
   unraid_url: ""
@@ -33,6 +36,7 @@ options:
   hidden_entities: []
   links: []
   house_plan_url: ""
+  photo_frame_folder: ""
 schema:
   title: str
   subtitle: str?
@@ -60,3 +64,5 @@ schema:
       pinned: bool?
       check: bool?
   house_plan_url: str
+  photo_frame_folder: str
+  photo_frame_shape: str?

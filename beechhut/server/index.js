@@ -10,6 +10,7 @@ import { createHomeAssistant } from './integrations/homeassistant.js';
 import { createUnifi } from './integrations/unifi.js';
 import { createLinks } from './integrations/links.js';
 import { createNotes } from './integrations/notes.js';
+import { createPhotos, createDemoPhotos } from './integrations/photos.js';
 import { demo, demoLinks } from './demo.js';
 import { buildOverview } from './overview.js';
 
@@ -27,6 +28,8 @@ const i = config.demo
       links: createLinks(config.links),
     };
 const notes = createNotes(DATA_DIR);
+const photos = config.demo ? createDemoPhotos(config.photoFrame.aspect)
+  : config.photoFrame.dir ? createPhotos(config.photoFrame.dir) : null;
 
 function demoLinkStore() {
   const store = createLinks(demoLinks.map((g) => ({ ...g, items: g.items.map((l) => ({ ...l, check: false })) })));
@@ -90,6 +93,7 @@ app.get('/api/meta', async () => ({
   },
   haVmName: config.homeassistant?.vmName || 'Home Assistant',
   housePlanUrl: config.housePlanUrl,
+  photoFrame: photos ? { aspect: config.photoFrame.aspect } : null,
 }));
 
 app.get('/api/overview', async () => buildOverview({ c, config }));
@@ -131,6 +135,23 @@ app.get('/api/links', async () => c.links());
 app.get('/api/notes', async () => notes.list());
 app.post('/api/notes', async (req) => notes.save(req.body || {}));
 app.delete('/api/notes/:id', async (req) => notes.remove(req.params.id));
+
+// Photo frame. Photos arrive already cropped on the phone, as JPEG bodies.
+app.addContentTypeParser('image/jpeg', { parseAs: 'buffer', bodyLimit: 25 * 1024 * 1024 }, (_req, body, done) => done(null, body));
+app.get('/api/photos', async () => need(photos, 'The photo frame').list());
+app.post('/api/photos', { bodyLimit: 25 * 1024 * 1024 }, async (req) => {
+  if (!Buffer.isBuffer(req.body)) throw Object.assign(new Error('Send the photo as image/jpeg'), { statusCode: 415 });
+  return { name: await need(photos, 'The photo frame').add(req.body) };
+});
+app.delete('/api/photos/:name', async (req) => {
+  await need(photos, 'The photo frame').remove(req.params.name);
+  return { ok: true };
+});
+app.get('/api/photos/:name', async (req, reply) => {
+  const p = await need(photos, 'The photo frame').read(req.params.name);
+  // Names are unique and never reused, so the browser can keep them.
+  return reply.header('cache-control', 'private, max-age=31536000, immutable').type(p.type).send(p.body);
+});
 
 // ── Front end ───────────────────────────────────────────────────────────────
 const dist = path.resolve(here, '../web/dist');
