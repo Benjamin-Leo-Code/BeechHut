@@ -64,6 +64,7 @@ export function ContainersPage({ meta }: { meta: Meta }) {
                       <div className="row-sub">
                         <span title={c.image} className="hide-sm">{c.image.replace(/^(ghcr\.io|lscr\.io|docker\.io)\//, '')}</span>
                         <span className="show-sm">{c.status}</span>
+                        {ports.length > 0 && <span className="show-sm">Port <span className="ctr-ports-sm">{ports.join(', ')}</span></span>}
                       </div>
                     </div>
                     <div className="ctr-uptime hide-sm">{c.status}</div>

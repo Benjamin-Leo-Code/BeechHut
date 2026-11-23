@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.11.1
+- Containers on the phone: the port now shows under the name, below the uptime.
+
 ## 0.11.0
 - Containers: each row is now laid out in columns that line up down the page: uptime, port, then Restart, Start/Stop and Open web UI buttons, with a blank space where a button doesn't apply.
 - The whole row is coloured by its state (green running, grey stopped, amber paused or restarting, red dead) in place of the status dot and label.

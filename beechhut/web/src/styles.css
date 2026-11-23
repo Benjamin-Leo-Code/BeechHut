@@ -498,3 +498,7 @@ table.disks { width: 100%; border-collapse: collapse; font-size: 14px; }
 @media (max-width: 760px) {
   .ctr-row { grid-template-columns: 36px minmax(0, 1fr) 36px 36px 36px; column-gap: 8px; }
 }
+@media (max-width: 760px) {
+  .ctr-row .row-sub { flex-direction: column; gap: 0; }
+  .ctr-ports-sm { font-family: var(--mono); font-size: 12px; }
+}
