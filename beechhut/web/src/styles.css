@@ -501,7 +501,7 @@ table.disks { width: 100%; border-collapse: collapse; font-size: 14px; }
 /* ── Needs attention: category buttons ────────────────────────────────── */
 .att-groups { display: flex; gap: 8px; padding: 12px 16px 6px; border-bottom: 1px solid var(--border); }
 .att-groups button {
-  flex: 1; max-width: 120px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 6px 8px;
+  flex: 1; min-width: 0; max-width: 130px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 6px 8px;
   border: 1px solid var(--border); border-radius: 12px; background: var(--surface-2); color: var(--text);
   font-size: 12px; font-weight: 600; cursor: pointer; transition: transform 0.15s, opacity 0.15s, filter 0.15s, box-shadow 0.15s, background 0.15s;
 }
@@ -514,3 +514,9 @@ table.disks { width: 100%; border-collapse: collapse; font-size: 14px; }
 /* Pressed: the chosen one pops out, the rest grey out. */
 .att-groups.has-active button:not(.active) { opacity: 0.4; filter: grayscale(1); }
 .att-groups button.active { transform: scale(1.1); background: var(--accent-soft); border-color: var(--accent); box-shadow: 0 6px 18px rgb(0 0 0 / 0.14); }
+@media (max-width: 760px) {
+  .att-groups { gap: 6px; padding: 12px 12px 6px; }
+  .att-groups button { font-size: 11px; padding: 10px 2px 8px; }
+  .att-groups button > span:last-child { max-width: 100%; text-align: center; line-height: 1.2; overflow-wrap: anywhere; }
+  .att-groups button { justify-content: flex-start; }
+}

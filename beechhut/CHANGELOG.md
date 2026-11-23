@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.14.0
+- Needs attention has a fourth button, **Needs attention**, first in the row. It's selected when the page opens and shows everything that isn't under Batteries, Updates or Unavailable.
+- One button is always selected: tap another to switch to it. The selected one stands out and the others are greyed.
+
 ## 0.13.2
 - Unavailable battery sensors now only show under **Batteries**, not under **Unavailable** as well.
 

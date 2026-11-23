@@ -1,4 +1,4 @@
-import { CheckCircle2, ChevronRight, Thermometer, Lightbulb, Download, Wifi, Server, Boxes, House, Network, Monitor, BatteryLow, Unplug } from 'lucide-react';
+import { CheckCircle2, ChevronRight, Thermometer, Lightbulb, Download, Wifi, Server, Boxes, House, Network, Monitor, BatteryLow, Unplug, AlertTriangle } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useApi } from '../api';
 import { navigate } from '../router';
@@ -55,43 +55,46 @@ function AppsBar({ unraid }: { unraid: boolean }) {
   );
 }
 
-const GROUPS: { key: AttentionGroup; label: string; icon: ReactNode; empty: string }[] = [
+type View = 'all' | AttentionGroup;
+const VIEWS: { key: View; label: string; icon: ReactNode; empty: string }[] = [
+  { key: 'all', label: 'Needs attention', icon: <AlertTriangle size={22} />, empty: 'All clear – nothing needs you right now.' },
   { key: 'battery', label: 'Batteries', icon: <BatteryLow size={22} />, empty: 'No low batteries.' },
   { key: 'update', label: 'Updates', icon: <Download size={22} />, empty: 'Everything is up to date.' },
   { key: 'unavailable', label: 'Unavailable', icon: <Unplug size={22} />, empty: 'Nothing is unavailable.' },
 ];
 
-/** Needs attention: a row of category buttons (batteries, updates, unavailable) above the list. */
+/**
+ * Needs attention: a row of buttons choosing what the list shows. One is always selected,
+ * starting with "Needs attention" (everything not under Batteries, Updates or Unavailable).
+ */
 function Attention({ items, meta }: { items: AttentionItem[]; meta: Meta }) {
-  const [group, setGroup] = useState<AttentionGroup | null>(null);
-  const groups = GROUPS.filter((g) => meta.integrations.homeassistant || (g.key === 'update' && meta.integrations.unifi));
-  const count = (k: AttentionGroup) => items.filter((a) => a.group === k).length;
-  const main = items.filter((a) => !a.group);
-  const shown = group ? items.filter((a) => a.group === group) : main;
-  const current = GROUPS.find((g) => g.key === group);
+  const [view, setView] = useState<View>('all');
+  const views = VIEWS.filter((v) => v.key === 'all' || meta.integrations.homeassistant || (v.key === 'update' && meta.integrations.unifi));
+  const inView = (k: View) => items.filter((a) => (k === 'all' ? !a.group : a.group === k));
+  const shown = inView(view);
+  const current = VIEWS.find((v) => v.key === view)!;
   return (
-    <Card title={current ? `${current.label} · ${shown.length}` : main.length ? `Needs attention · ${main.length}` : 'Needs attention'} pad={false}>
-      {groups.length > 0 && (
-        <div className={`att-groups ${group ? 'has-active' : ''}`} role="group" aria-label="Show a category">
-          {groups.map((g) => {
-            const n = count(g.key);
+    <Card title={shown.length ? `${current.label} · ${shown.length}` : current.label} pad={false}>
+      {views.length > 1 && (
+        <div className="att-groups has-active" role="radiogroup" aria-label="Show">
+          {views.map((v) => {
+            const n = inView(v.key).length;
             return (
-              <button key={g.key} type="button" aria-pressed={group === g.key} className={group === g.key ? 'active' : ''}
-                onClick={() => setGroup(group === g.key ? null : g.key)} title={group === g.key ? 'Back to everything' : `Show ${g.label.toLowerCase()}`}>
-                <span className="att-group-icon">{g.icon}{n > 0 && <span className="att-count">{n}</span>}</span>
-                <span>{g.label}</span>
+              <button key={v.key} type="button" role="radio" aria-checked={view === v.key} className={view === v.key ? 'active' : ''}
+                onClick={() => setView(v.key)} title={`Show ${v.label.toLowerCase()}`}>
+                <span className="att-group-icon">{v.icon}{n > 0 && <span className="att-count">{n}</span>}</span>
+                <span>{v.label}</span>
               </button>
             );
           })}
         </div>
       )}
       {shown.length === 0 ? (
-        current ? <div className="all-clear"><CheckCircle2 size={22} /> {current.empty}</div>
-          : <div className="all-clear"><CheckCircle2 size={22} /> All clear – nothing needs you right now.</div>
+        <div className="all-clear"><CheckCircle2 size={22} /> {current.empty}</div>
       ) : (
         <ul className="attention">
           {shown.map((a, i) => (
-            <li key={`${group}-${i}`}>
+            <li key={`${view}-${i}`}>
               <button onClick={() => a.page && navigate(a.page)} disabled={!a.page}>
                 <Dot tone={levelTone[a.level]} />
                 <span className="att-text"><strong>{a.title}</strong>{a.detail && <small>{a.detail}</small>}</span>
