@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.11.0
+- Containers: each row is now laid out in columns that line up down the page: uptime, port, then Restart, Start/Stop and Open web UI buttons, with a blank space where a button doesn't apply.
+- The whole row is coloured by its state (green running, grey stopped, amber paused or restarting, red dead) in place of the status dot and label.
+- On the phone, the same three buttons sit at the end of each row, and the uptime goes under the name.
+
 ## 0.10.0
 - Removed Samsung The Frame support: the Frame TV options in Photo uploader, the Art Mode buttons and the Frame TV settings are gone. Photo uploader is back to adding photos to the photo frame only.
 - If you'd turned it on, delete the **Frame TV Art Mode** button helper in Home Assistant (Settings → Devices & services → Helpers); BeechHut no longer uses it.

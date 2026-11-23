@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
-import { ExternalLink, Play, RotateCw, Square, Star, MoreHorizontal } from 'lucide-react';
+import { ExternalLink, Play, RotateCw, Square, Star } from 'lucide-react';
 import { api, mutate, refresh, useApi } from '../api';
-import { AppIcon, Button, Card, Dot, Empty, ErrorNote, Loading, Modal, SearchInput, Segmented, confirm, useAction, type Tone } from '../ui';
+import { AppIcon, Button, Card, Empty, ErrorNote, Loading, SearchInput, Segmented, confirm, useAction, type Tone } from '../ui';
 import { matches } from '../format';
 import type { Container, Meta } from '../types';
 
@@ -13,7 +13,6 @@ export function ContainersPage({ meta }: { meta: Meta }) {
   const { data, error, loading } = useApi<Container[]>(KEY, 5000);
   const [q, setQ] = useState('');
   const [filter, setFilter] = useState<'all' | 'running' | 'stopped'>('all');
-  const [sheet, setSheet] = useState<Container | null>(null);
   const { busy, run } = useAction();
 
   const list = useMemo(() => (data || []).filter((c) =>
@@ -48,59 +47,44 @@ export function ContainersPage({ meta }: { meta: Meta }) {
       {data && (
         <Card pad={false}>
           {list.length === 0 ? <Empty>No containers match.</Empty> : (
-            <ul className="rows">
-              {list.map((c) => (
-                <li key={c.id} className="row">
-                  <AppIcon src={c.icon} name={c.name} size={36} />
-                  <div className="row-main">
-                    <div className="row-title">
-                      <strong>{c.name}</strong>
-                      {c.favourite && <Star size={13} className="fav" />}
-                      <span className="state"><Dot tone={tone(c.state)} />{label(c.state)}</span>
-                      {c.state !== 'running' && c.autoStart && <span className="badge badge-warn">autostart</span>}
+            <ul className="rows ctr-rows">
+              {list.map((c) => {
+                const ports = [...new Set(c.ports.map((p) => p.public).filter(Boolean))];
+                const on = c.state === 'running';
+                return (
+                  <li key={c.id} className={`row ctr-row ctr-${tone(c.state)}`} title={label(c.state)}>
+                    <AppIcon src={c.icon} name={c.name} size={36} />
+                    <div className="row-main">
+                      <div className="row-title">
+                        <strong className="ctr-name">{c.name}</strong>
+                        {c.favourite && <Star size={13} className="fav" />}
+                        {!on && c.autoStart && <span className="badge badge-warn">autostart</span>}
+                        <span className="visually-hidden">{label(c.state)}</span>
+                      </div>
+                      <div className="row-sub">
+                        <span title={c.image} className="hide-sm">{c.image.replace(/^(ghcr\.io|lscr\.io|docker\.io)\//, '')}</span>
+                        <span className="show-sm">{c.status}</span>
+                      </div>
                     </div>
-                    <div className="row-sub">
-                      <span title={c.image} className="hide-sm">{c.image.replace(/^(ghcr\.io|lscr\.io|docker\.io)\//, '')}</span>
-                      <span>{c.status}</span>
-                      {c.ports.length > 0 && <span className="hide-sm">{c.ports.map((p) => p.public).join(', ')}</span>}
+                    <div className="ctr-uptime hide-sm">{c.status}</div>
+                    <div className="ctr-ports hide-sm">{ports.join(', ')}</div>
+                    <div className="ctr-slot">
+                      {on && <Button icon={<RotateCw size={16} />} title="Restart" busy={busy === `${c.id}:restart`} onClick={() => act(c, 'restart')} />}
                     </div>
-                  </div>
-                  <div className="row-actions show-sm">
-                    {c.state === 'running'
-                      ? c.url && <Button icon={<ExternalLink size={16} />} title={`Open ${c.name}`} href={c.url} />
-                      : <Button icon={<Play size={16} />} title="Start" variant="primary" busy={busy === `${c.id}:start`} onClick={() => act(c, 'start')} />}
-                    <Button icon={<MoreHorizontal size={18} />} title="More" onClick={() => setSheet(c)} />
-                  </div>
-                  <div className="row-actions hide-sm">
-                    {c.url && <Button icon={<ExternalLink size={16} />} title={`Open ${c.name}`} href={c.url} disabled={c.state !== 'running'} />}
-                    {c.state === 'running' ? (
-                      <>
-                        <Button icon={<RotateCw size={16} />} title="Restart" busy={busy === `${c.id}:restart`} onClick={() => act(c, 'restart')} />
-                        <Button icon={<Square size={15} />} title="Stop" busy={busy === `${c.id}:stop`} onClick={() => act(c, 'stop')} />
-                      </>
-                    ) : (
-                      <Button icon={<Play size={16} />} title="Start" variant="primary" busy={busy === `${c.id}:start`} onClick={() => act(c, 'start')} />
-                    )}
-                  </div>
-                </li>
-              ))}
+                    <div className="ctr-slot">
+                      {on
+                        ? <Button icon={<Square size={15} />} title="Stop" busy={busy === `${c.id}:stop`} onClick={() => act(c, 'stop')} />
+                        : <Button icon={<Play size={16} />} title="Start" variant="primary" busy={busy === `${c.id}:start`} onClick={() => act(c, 'start')} />}
+                    </div>
+                    <div className="ctr-slot">
+                      {c.url && <Button icon={<ExternalLink size={16} />} title={`Open ${c.name}`} href={c.url} disabled={!on} />}
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </Card>
-      )}
-      {sheet && (
-        <Modal title={sheet.name} onClose={() => setSheet(null)}>
-          <div className="sheet-actions">
-            {sheet.url && sheet.state === 'running' && <Button icon={<ExternalLink size={18} />} href={sheet.url}>Open web UI</Button>}
-            {sheet.state === 'running' ? (
-              <>
-                <Button icon={<RotateCw size={18} />} onClick={() => { setSheet(null); act(sheet, 'restart'); }}>Restart</Button>
-                <Button icon={<Square size={16} />} onClick={() => { setSheet(null); act(sheet, 'stop'); }}>Stop</Button>
-              </>
-            ) : <Button icon={<Play size={18} />} variant="primary" onClick={() => { setSheet(null); act(sheet, 'start'); }}>Start</Button>}
-          </div>
-          <p className="muted small">{sheet.image} · {sheet.status}{sheet.ports.length ? ` · ports ${sheet.ports.map((p) => p.public).join(', ')}` : ''}</p>
-        </Modal>
       )}
     </div>
   );
