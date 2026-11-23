@@ -100,7 +100,33 @@ async function haInternalUrl() {
   return `${scheme(c)}://homeassistant:${c.port}`;
 }
 // Home Assistant as the browser sees it (for its sign-in page): the setting, else HA's own
-// internal URL, else the same machine the browser reached BeechHut on, on HA's own port.
+// internal URL, else the same machine the browser reached BeechHut on. For that last one, try
+// the plain address (newer HA OS installs use port 80, no number) and HA's own port, and use
+// whichever answers as Home Assistant.
+const probed = new Map();
+async function answersAsHa(base) {
+  try {
+    const res = await fetch(`${base}/auth/providers`, { signal: AbortSignal.timeout(3000), redirect: 'manual' });
+    const body = await res.json();
+    return Array.isArray(body) || Array.isArray(body?.providers);
+  } catch { return false; }
+}
+async function findHa(host) {
+  if (probed.has(host)) return probed.get(host);
+  const c = await haCore();
+  const plain = `${scheme(c)}://${host}`;
+  const withPort = (c.ssl && c.port === 443) || (!c.ssl && c.port === 80) ? plain : `${plain}:${c.port}`;
+  const candidates = [...new Set([plain, withPort, `http://${host}:8123`])];
+  for (const url of candidates) {
+    if (await answersAsHa(url)) {
+      console.log(`[Direct access] Home Assistant answers at ${url}; sending sign-ins there`);
+      probed.set(host, url);
+      return url;
+    }
+  }
+  console.log(`[Direct access] couldn’t find Home Assistant at ${candidates.join(' or ')}; set "Home Assistant address (for direct access)" on the Configuration tab`);
+  return withPort; // not remembered, so it's tried again next time
+}
 let haInternalBrowser;
 async function haBrowserUrl(req) {
   if (config.homeAssistantUrl) return config.homeAssistantUrl;
@@ -109,9 +135,7 @@ async function haBrowserUrl(req) {
   }
   if (haInternalBrowser) return haInternalBrowser.replace(/\/+$/, '');
   const host = String(req.headers['x-forwarded-host'] || req.headers.host || '').replace(/:\d+$/, '');
-  const c = await haCore();
-  const usual = (c.ssl && c.port === 443) || (!c.ssl && c.port === 80);
-  return `${scheme(c)}://${host}${usual ? '' : `:${c.port}`}`;
+  return findHa(host);
 }
 const directAuth = config.addon ? createDirectAuth({ dataDir: DATA_DIR, haInternalUrl, haBrowserUrl, log: (m) => console.log(`[Direct access] ${m}`) }) : null;
 

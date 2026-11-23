@@ -113,7 +113,7 @@ As well as the Home Assistant sidebar and app, BeechHut can have its own address
 - Only Home Assistant **administrators** can use it, as in the sidebar. Anyone else is turned away after signing in.
 - Each browser stays signed in for up to 30 days. **Sign out** is at the bottom of the sidebar, or in **More** on a phone. Removing BeechHut's sign-in under *Refresh tokens* in your Home Assistant profile also signs that browser out.
 - BeechHut checks with Home Assistant every few minutes that you're still an administrator.
-- Signing in uses Home Assistant's *Local network* address (Settings → System → Network) if it has one, otherwise the same machine as BeechHut on Home Assistant's own port. If that takes you to the wrong address (for example, behind a reverse proxy), set **Home Assistant address (for direct access)** on the Configuration tab to the address you open Home Assistant at, e.g. `http://192.168.1.20`.
+- Signing in uses Home Assistant's *Local network* address (Settings → System → Network) if it has one, otherwise the same machine as BeechHut, at whichever of the plain address (as newer Home Assistant OS installs use) or Home Assistant's own port answers. If that takes you to the wrong address (for example, behind a reverse proxy), set **Home Assistant address (for direct access)** on the Configuration tab to the address you open Home Assistant at, e.g. `http://192.168.1.20`.
 - Behind a reverse proxy such as Nginx Proxy Manager, point a name at `<home-assistant-ip>:8098`, e.g. `beechhut.home.internal`.
 - It uses plain `http`, like Home Assistant on port 8123, so the sign-in isn't encrypted on your network. Don't forward this port to the internet; for remote access, use the Home Assistant app.
 

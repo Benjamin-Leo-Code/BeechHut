@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.17.2
+- Direct access: before sending you to sign in, BeechHut checks where Home Assistant actually answers – the plain address (newer Home Assistant OS installs use port 80, with no number) or its own port – and uses that. The address it found is written to the Log tab.
+
 ## 0.17.1
 - Direct access: signing in now goes to Home Assistant on the port it actually runs on (for example 80), rather than assuming 8123, when Home Assistant has no local network address set. The port is written to the add-on's Log tab.
 
