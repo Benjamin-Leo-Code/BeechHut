@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.13.2
+- Unavailable battery sensors now only show under **Batteries**, not under **Unavailable** as well.
+
 ## 0.13.1
 - **Batteries** in Needs attention now also lists battery sensors that are unavailable (often a flat or missing battery), after the low ones.
 

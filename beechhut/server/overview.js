@@ -69,8 +69,8 @@ export async function buildOverview({ c, config }) {
         .map((e) => ({ e, level: 1000, detail: 'Unavailable' })),
     ].sort((a, b) => a.level - b.level);
     for (const { e, detail } of low) add('warning', 'Home Assistant', e.name.replace(/ battery( level)?$/i, ''), detail, 'home', 'battery');
-    // Every unavailable entity, by name.
-    for (const e of s.filter((x) => x.state === 'unavailable').sort((a, b) => a.name.localeCompare(b.name))) {
+    // Every unavailable entity, by name (batteries are already under Batteries).
+    for (const e of s.filter((x) => x.state === 'unavailable' && x.deviceClass !== 'battery').sort((a, b) => a.name.localeCompare(b.name))) {
       add('info', 'Home Assistant', e.name, e.id, 'home', 'unavailable');
     }
   }
