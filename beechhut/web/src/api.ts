@@ -4,6 +4,10 @@ export class ApiError extends Error {
   constructor(message: string, public status: number) { super(message); }
 }
 
+let signingOut = false;
+/** Signing out: stop a request that finds the session gone from starting a new sign-in. */
+export const markSigningOut = () => { signingOut = true; };
+
 export async function api<T = any>(path: string, opts: { method?: string; body?: unknown } = {}): Promise<T> {
   // Relative URL so it works under HA ingress' /api/hassio_ingress/<token>/ prefix.
   const res = await fetch(`api${path}`, {
@@ -13,6 +17,8 @@ export async function api<T = any>(path: string, opts: { method?: string; body?:
     credentials: 'same-origin',
   });
   const data = await res.json().catch(() => null);
+  // Direct access: the sign-in has run out, so go through Home Assistant's sign-in again.
+  if (res.status === 401 && data?.signIn) { if (!signingOut) location.href = '/auth/login'; throw new ApiError('Signing in again…', 401); }
   if (!res.ok) throw new ApiError(data?.error || `Request failed (${res.status})`, res.status);
   return data as T;
 }

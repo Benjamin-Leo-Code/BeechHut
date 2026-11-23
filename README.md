@@ -73,7 +73,8 @@ beechhut/                the add-on
 
 ### How it fits into Home Assistant
 
-- **Ingress:** HA serves the UI under `/api/hassio_ingress/<token>/`, so the front end only uses relative URLs. The server rejects any connection that doesn't come from the Supervisor's ingress proxy.
+- **Ingress:** HA serves the UI under `/api/hassio_ingress/<token>/`, so the front end only uses relative URLs. On the ingress port (8099) the server rejects any connection that doesn't come from the Supervisor's ingress proxy.
+- **Direct access:** the same app also listens on 8098, which is only reachable if mapped on the Network tab. There, users sign in through Home Assistant's own OAuth flow (`server/directauth.js`); BeechHut swaps the code for tokens server-side, keeps them in `/data`, gives the browser an HttpOnly session cookie and only lets administrators in.
 - **Home Assistant API:** reached through `http://supervisor/core` with the injected `SUPERVISOR_TOKEN` (`homeassistant_api: true`).
 - **Storage:** notes are kept in `/data`, so they're included in HA backups. Photo uploader writes to the photo frame folder in HA's config folder, mapped in at `/homeassistant` (`homeassistant_config`).
 - **Unraid:** the GraphQL schema has changed between 7.x releases. Each section is queried separately, with fallbacks, so a missing field only blanks one card.

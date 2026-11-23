@@ -1,5 +1,5 @@
 name: BeechHut
-version: "0.16.0"
+version: "0.17.0"
 slug: beechhut
 description: Admin console for the house – Unraid, Home Assistant and UniFi in one place
 url: https://github.com/Benjamin-Leo-Code/BeechHut
@@ -16,6 +16,11 @@ panel_icon: mdi:home-city-outline
 panel_title: BeechHut
 panel_admin: true
 homeassistant_api: true
+# Direct access on its own port, with Home Assistant sign-in. Off until a port is set on the Network tab.
+ports:
+  8098/tcp: null
+ports_description:
+  8098/tcp: Direct access (sign in with a Home Assistant administrator account)
 map:
   - type: addon_config
     read_only: false
@@ -66,3 +71,4 @@ schema:
   house_plan_url: str
   photo_frame_folder: str
   photo_frame_shape: str?
+  home_assistant_url: str?

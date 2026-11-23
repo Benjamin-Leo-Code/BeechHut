@@ -116,6 +116,8 @@ export function loadConfig() {
       dir: photoFrameDir(process.env.BEECHHUT_PHOTO_FRAME_FOLDER || pick(o.photo_frame_folder, y.photo_frame?.folder)),
       aspect: aspectOf(pick(o.photo_frame_shape, y.photo_frame?.shape)),
     },
+    // Home Assistant's address as the browser sees it, for direct access sign-in (optional).
+    homeAssistantUrl: trimSlash(String(pick(o.home_assistant_url, y.home_assistant_url) || '').trim()) || '',
     links: !blank(o.links) ? groupLinks(o.links) : Array.isArray(y.links) ? (y.links.some((l) => l?.url) ? groupLinks(y.links) : y.links) : [],
   };
 }

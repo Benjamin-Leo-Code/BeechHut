@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.17.0
+- **Direct access**: BeechHut can have its own address, e.g. `http://<home-assistant-ip>:8098`, as well as the sidebar. It's off until you set a port on the Configuration tab's **Network** section. You sign in with your Home Assistant account (administrators only) and stay signed in for up to 30 days; **Sign out** is in the sidebar, or in **More** on a phone.
+- New optional setting **Home Assistant address (for direct access)**, for when signing in sends you to the wrong address.
+
 ## 0.16.0
 - **Batteries** shows the room (Home Assistant area) each battery sensor is in, and **Unavailable** shows each device's room next to its name.
 - **Updates**: Home Assistant updates have an **Install** button (it asks first). UniFi firmware updates still open the Network page.

@@ -2,6 +2,8 @@ export type Level = 'alert' | 'warning' | 'info';
 export type Page = 'overview' | 'containers' | 'server' | 'home' | 'network' | 'plan' | 'photos' | 'notes';
 
 export interface Meta {
+  /** Signed-in user's name, when using direct access (not the HA sidebar). */
+  user: string | null;
   title: string;
   subtitle: string;
   demo: boolean;

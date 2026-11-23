@@ -103,14 +103,28 @@ Set it up on the Configuration tab:
 
 BeechHut saves each photo straight into the folder as `YYYY-MM-DD-HHMMSS-<random>.jpg`, so names sort newest first and can't be guessed (anything in `www` can be read at `/local/…` without logging in). If the folder is also listed under `homeassistant: media_dirs:`, the photos appear in Home Assistant's media browser as usual; nothing else needs to change.
 
+### Direct access (its own port)
+
+As well as the Home Assistant sidebar and app, BeechHut can have its own address, like `http://<home-assistant-ip>:8098`. It's off until you turn it on:
+
+1. On BeechHut's **Configuration** tab, under **Network**, enter a port for *Direct access*, e.g. `8098`, and save. BeechHut restarts.
+2. Open `http://<home-assistant-ip>:8098`. You're sent to Home Assistant's sign-in page; sign in and you're brought back to BeechHut.
+
+- Only Home Assistant **administrators** can use it, as in the sidebar. Anyone else is turned away after signing in.
+- Each browser stays signed in for up to 30 days. **Sign out** is at the bottom of the sidebar, or in **More** on a phone. Removing BeechHut's sign-in under *Refresh tokens* in your Home Assistant profile also signs that browser out.
+- BeechHut checks with Home Assistant every few minutes that you're still an administrator.
+- If signing in takes you to the wrong address for Home Assistant (for example, behind a reverse proxy), set **Home Assistant address (for direct access)** on the Configuration tab to the address you open Home Assistant at, e.g. `http://192.168.1.20:8123`.
+- Behind a reverse proxy such as Nginx Proxy Manager, point a name at `<home-assistant-ip>:8098`, e.g. `beechhut.home.internal`.
+- It uses plain `http`, like Home Assistant on port 8123, so the sign-in isn't encrypted on your network. Don't forward this port to the internet; for remote access, use the Home Assistant app.
+
 ### Advanced
 
 For anything the Configuration tab doesn't cover, such as overriding a container's link or setting links in YAML, create `config.yaml` in this add-on's config folder: `/addon_configs/<id>_beechhut/` on the host, which the File editor or Studio Code Server add-on can reach. See `config.example.yaml` in the repository.
 
 ## Access and security
 
-- BeechHut only accepts connections through Home Assistant (ingress), so it uses your HA login. If you can reach HA remotely, e.g. through Nabu Casa, you can reach BeechHut too.
+- From the sidebar and app, BeechHut only accepts connections through Home Assistant (ingress), so it uses your HA login. Direct access, if you turn it on, asks you to sign in with your Home Assistant account. If you can reach HA remotely, e.g. through Nabu Casa, you can reach BeechHut too.
 - Only Home Assistant **administrators** should see it in the sidebar, because it can stop containers and reboot VMs. Panels for add-ons with ingress are admin-only by default.
-- Notes are stored in the add-on's own storage and included in Home Assistant backups.
+- Notes and direct-access sign-ins are stored in the add-on's own storage and included in Home Assistant backups.
 - BeechHut can read and write Home Assistant's config folder, so that Photo uploader can save photos to the frame's folder. It only ever touches photos in that one folder.
 - Because it runs inside Home Assistant, it's unavailable while HA is down or restarting. Rebooting the Home Assistant VM from the Server page works, but the console will drop out until HA is back.

@@ -1,8 +1,8 @@
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import {
-  LayoutGrid, Boxes, Server, House, Network, NotebookPen, Search, MoreHorizontal, Command, Box, Images,
+  LayoutGrid, Boxes, Server, House, Network, NotebookPen, Search, MoreHorizontal, Command, Box, Images, LogOut,
 } from 'lucide-react';
-import { useApi } from './api';
+import { markSigningOut, useApi } from './api';
 import { navigate, useRoute } from './router';
 import { ConfirmHost, Toaster, Button, Loading } from './ui';
 import { CommandPalette } from './CommandPalette';
@@ -85,6 +85,7 @@ export function App() {
         </nav>
         <div className="sidebar-foot">
           {meta.demo && <span className="badge badge-info">Demo data</span>}
+          {meta.user && <span className="muted small signed-in">{meta.user} · <a href="/auth/logout" onClick={markSigningOut}>Sign out</a></span>}
         </div>
       </aside>
 
@@ -112,6 +113,7 @@ export function App() {
             {nav.filter((n) => !n.mobile).map((n) => (
               <button key={n.page} onClick={() => navigate(n.page)} className={page === n.page ? 'active' : ''}>{n.icon}<span>{n.label}</span></button>
             ))}
+            {meta.user && <button onClick={() => { markSigningOut(); location.href = '/auth/logout'; }}><LogOut size={20} /><span>Sign out ({meta.user})</span></button>}
           </div>
         </div>
       )}

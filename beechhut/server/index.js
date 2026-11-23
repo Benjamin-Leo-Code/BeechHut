@@ -3,8 +3,11 @@ import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
+import fastifyCookie from '@fastify/cookie';
+import http from 'node:http';
 import { loadConfig, DATA_DIR } from './config.js';
-import { cached, HttpError } from './http.js';
+import { cached, HttpError, request } from './http.js';
+import { createDirectAuth } from './directauth.js';
 import { createUnraid } from './integrations/unraid.js';
 import { createHomeAssistant } from './integrations/homeassistant.js';
 import { createUnifi } from './integrations/unifi.js';
@@ -63,15 +66,65 @@ const need = (fn, name) => {
 };
 
 // ── Access control ──────────────────────────────────────────────────────────
-// As an add-on we're only reachable through HA ingress, which has already
-// signed the user in. Refuse anything that didn't come via the Supervisor.
+// Two ways in, as an add-on:
+//  • the HA sidebar/app (ingress, port 8099): HA has already signed the user in, so refuse
+//    anything that didn't come via the Supervisor;
+//  • direct access (port 8098, off unless mapped on the add-on's Network tab): users sign in
+//    with their Home Assistant account, administrators only.
 const INGRESS_PROXY = '172.30.32.2';
+const DIRECT_PORT = Number(process.env.BEECHHUT_DIRECT_PORT || 8098);
+const isDirect = (req) => config.addon && req.socket.localPort === DIRECT_PORT;
+await app.register(fastifyCookie);
+
+// Home Assistant as BeechHut's server sees it (for swapping sign-in codes for tokens).
+let haInternal = null;
+async function haInternalUrl() {
+  if (process.env.BEECHHUT_HA_DIRECT) return process.env.BEECHHUT_HA_DIRECT;
+  if (!haInternal) {
+    try {
+      const r = await request('http://supervisor/core/info', { headers: { authorization: `Bearer ${process.env.SUPERVISOR_TOKEN}` } });
+      haInternal = `${r.data?.ssl ? 'https' : 'http'}://homeassistant:${r.data?.port || 8123}`;
+    } catch { return 'http://homeassistant:8123'; }
+  }
+  return haInternal;
+}
+// Home Assistant as the browser sees it (for its sign-in page): the setting, else HA's own
+// internal URL, else the same machine the browser reached BeechHut on, port 8123.
+let haInternalBrowser;
+async function haBrowserUrl(req) {
+  if (config.homeAssistantUrl) return config.homeAssistantUrl;
+  if (haInternalBrowser === undefined) {
+    try { haInternalBrowser = (await request(`${config.homeassistant.url}/api/config`, { headers: { authorization: `Bearer ${config.homeassistant.token}` } })).internal_url || null; } catch { haInternalBrowser = null; }
+  }
+  if (haInternalBrowser) return haInternalBrowser.replace(/\/+$/, '');
+  const host = String(req.headers['x-forwarded-host'] || req.headers.host || '').replace(/:\d+$/, '');
+  return `http://${host}:8123`;
+}
+const directAuth = config.addon ? createDirectAuth({ dataDir: DATA_DIR, haInternalUrl, haBrowserUrl, log: (m) => console.log(`[Direct access] ${m}`) }) : null;
+
 if (config.addon) {
   app.addHook('onRequest', async (req, reply) => {
+    if (isDirect(req)) {
+      const url = req.url.split('?')[0];
+      if (url.startsWith('/auth/') || url === '/icon.svg') return; // sign-in pages and their icon
+      const user = await directAuth.check(req);
+      if (user) { req.user = user; return; }
+      // Only a page being opened goes to sign-in; anything else (API calls, images) just gets 401,
+      // so background requests can never start a sign-in by themselves.
+      const opening = req.method === 'GET' && (req.headers['sec-fetch-mode'] === 'navigate' || String(req.headers.accept || '').includes('text/html'));
+      if (!opening) return reply.code(401).send({ error: 'Please sign in again', signIn: true });
+      return reply.redirect('/auth/login');
+    }
     const ip = req.socket.remoteAddress?.replace(/^::ffff:/, '');
     if (ip !== INGRESS_PROXY && ip !== '127.0.0.1') return reply.code(403).send({ error: 'Open BeechHut from the Home Assistant sidebar' });
   });
 }
+
+// Sign-in pages, for direct access only.
+const directOnly = (fn) => async (req, reply) => (isDirect(req) ? fn(req, reply) : reply.code(404).send({ error: 'Not found' }));
+app.get('/auth/login', directOnly((req, reply) => directAuth.login(req, reply)));
+app.get('/auth/callback', directOnly((req, reply) => directAuth.callback(req, reply)));
+app.get('/auth/logout', directOnly((req, reply) => directAuth.logout(req, reply)));
 
 app.setErrorHandler((err, _req, reply) => {
   // Our own errors (and Fastify's) carry statusCode. Anything from an upstream system is a 502/504.
@@ -81,7 +134,8 @@ app.setErrorHandler((err, _req, reply) => {
 });
 
 // ── API ─────────────────────────────────────────────────────────────────────
-app.get('/api/meta', async () => ({
+app.get('/api/meta', async (req) => ({
+  user: req.user?.name ?? null,
   title: config.title,
   subtitle: config.subtitle,
   demo: config.demo,
@@ -170,4 +224,7 @@ if (fs.existsSync(dist)) {
 }
 
 await app.listen({ host: '0.0.0.0', port: config.port });
+// Direct access: the same app on a second port. It's only reachable if the port is mapped
+// on the add-on's Network tab.
+if (config.addon) http.createServer((req, res) => app.routing(req, res)).listen(DIRECT_PORT, '0.0.0.0');
 console.log(`BeechHut listening on :${config.port}${config.demo ? ' (demo mode)' : ''}${config.addon ? ' (Home Assistant add-on)' : ''}`);
