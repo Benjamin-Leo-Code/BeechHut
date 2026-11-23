@@ -77,6 +77,9 @@ const entities = [
   sensor('update.hacs_update', 'HACS update', 'off', null, null, { installed_version: '2.1.0', latest_version: '2.1.0', title: 'HACS' }),
   sensor('update.zigbee2mqtt_update', 'Zigbee2MQTT update', 'on', null, null, { installed_version: '2.6.1', latest_version: '2.7.0', title: 'Zigbee2MQTT' }),
   sensor('sensor.boiler_pressure', 'Boiler pressure', 'unavailable', 'bar', 'pressure'),
+  sensor('sensor.shed_temperature', 'Shed temperature', 'unavailable', '°C', 'temperature'),
+  sensor('switch.garden_lights', 'Garden lights', 'unavailable', null, null),
+  sensor('binary_sensor.smoke_alarm_battery', 'Smoke alarm battery', 'on', null, 'battery'),
 ];
 
 const uDevices = [

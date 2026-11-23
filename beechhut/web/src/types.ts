@@ -61,7 +61,8 @@ export interface HousePlan { name: string; parts: PlanPart[] }
 
 export interface Note { id: string; title: string; body: string; pinned: boolean; created: number; updated: number }
 
-export interface AttentionItem { level: Level; source: string; title: string; detail: string | null; page: Page | null }
+export type AttentionGroup = 'battery' | 'update' | 'unavailable';
+export interface AttentionItem { level: Level; source: string; title: string; detail: string | null; page: Page | null; group: AttentionGroup | null }
 type Tile<T> = T | { error?: string; off?: boolean };
 export interface Overview {
   attention: AttentionItem[];

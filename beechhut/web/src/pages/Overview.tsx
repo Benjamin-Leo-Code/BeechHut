@@ -1,10 +1,10 @@
-import { CheckCircle2, ChevronRight, Thermometer, Lightbulb, Download, Wifi, Server, Boxes, House, Network, Monitor } from 'lucide-react';
+import { CheckCircle2, ChevronRight, Thermometer, Lightbulb, Download, Wifi, Server, Boxes, House, Network, Monitor, BatteryLow, Unplug } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useApi } from '../api';
 import { navigate } from '../router';
 import { AppIcon, Bar, Card, Dot, ErrorNote, Loading, type Tone } from '../ui';
 import { bitrate, kib, pct, since } from '../format';
-import type { Container, Meta, Overview } from '../types';
+import type { AttentionGroup, AttentionItem, Container, LinkGroup, Meta, Overview } from '../types';
 
 const levelTone: Record<string, Tone> = { alert: 'bad', warning: 'warn', info: 'info' };
 
@@ -23,22 +23,84 @@ function Clock() {
   );
 }
 
-/** Every running container that has a web UI, favourites first – one tap to open. */
-function AppsBar() {
-  const { data } = useApi<Container[]>('/containers', 10000);
+/** Every running container that has a web UI (favourites first), then your own links – one tap to open. */
+function AppsBar({ unraid }: { unraid: boolean }) {
+  const { data } = useApi<Container[]>(unraid ? '/containers' : null, 10000);
+  const links = useApi<LinkGroup[]>('/links', 60000);
   const apps = (data || [])
     .filter((c) => c.state === 'running' && c.url)
     .sort((a, b) => Number(b.favourite) - Number(a.favourite) || a.name.localeCompare(b.name));
-  if (!apps.length) return null;
+  const own = (links.data || []).flatMap((g) => g.items);
+  if (!apps.length && !own.length) return null;
   return (
-    <nav className="apps-bar" aria-label="Running apps">
+    <nav className="apps-bar" aria-label="Apps and links">
       {apps.map((c) => (
         <a key={c.id} href={c.url!} target="_blank" rel="noreferrer" title={`Open ${c.name}`}>
           <AppIcon src={c.icon} name={c.name} size={40} />
           <span>{c.name}</span>
         </a>
       ))}
+      {own.map((l) => (
+        <a key={l.url} href={l.url} target="_blank" rel="noreferrer" title={l.health && !l.health.up ? `${l.name} isn’t responding` : `Open ${l.name}`}>
+          <span className="apps-icon">
+            <AppIcon src={l.icon} name={l.name} size={40} />
+            {l.health && !l.health.up && <span className="apps-down" aria-label="Not responding" />}
+          </span>
+          <span>{l.name}</span>
+        </a>
+      ))}
     </nav>
+  );
+}
+
+const GROUPS: { key: AttentionGroup; label: string; icon: ReactNode; empty: string }[] = [
+  { key: 'battery', label: 'Batteries', icon: <BatteryLow size={22} />, empty: 'No low batteries.' },
+  { key: 'update', label: 'Updates', icon: <Download size={22} />, empty: 'Everything is up to date.' },
+  { key: 'unavailable', label: 'Unavailable', icon: <Unplug size={22} />, empty: 'Nothing is unavailable.' },
+];
+
+/** Needs attention: a row of category buttons (batteries, updates, unavailable) above the list. */
+function Attention({ items, meta }: { items: AttentionItem[]; meta: Meta }) {
+  const [group, setGroup] = useState<AttentionGroup | null>(null);
+  const groups = GROUPS.filter((g) => meta.integrations.homeassistant || (g.key === 'update' && meta.integrations.unifi));
+  const count = (k: AttentionGroup) => items.filter((a) => a.group === k).length;
+  const main = items.filter((a) => !a.group);
+  const shown = group ? items.filter((a) => a.group === group) : main;
+  const current = GROUPS.find((g) => g.key === group);
+  return (
+    <Card title={current ? `${current.label} · ${shown.length}` : main.length ? `Needs attention · ${main.length}` : 'Needs attention'} pad={false}>
+      {groups.length > 0 && (
+        <div className={`att-groups ${group ? 'has-active' : ''}`} role="group" aria-label="Show a category">
+          {groups.map((g) => {
+            const n = count(g.key);
+            return (
+              <button key={g.key} type="button" aria-pressed={group === g.key} className={group === g.key ? 'active' : ''}
+                onClick={() => setGroup(group === g.key ? null : g.key)} title={group === g.key ? 'Back to everything' : `Show ${g.label.toLowerCase()}`}>
+                <span className="att-group-icon">{g.icon}{n > 0 && <span className="att-count">{n}</span>}</span>
+                <span>{g.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+      {shown.length === 0 ? (
+        current ? <div className="all-clear"><CheckCircle2 size={22} /> {current.empty}</div>
+          : <div className="all-clear"><CheckCircle2 size={22} /> All clear – nothing needs you right now.</div>
+      ) : (
+        <ul className="attention">
+          {shown.map((a, i) => (
+            <li key={`${group}-${i}`}>
+              <button onClick={() => a.page && navigate(a.page)} disabled={!a.page}>
+                <Dot tone={levelTone[a.level]} />
+                <span className="att-text"><strong>{a.title}</strong>{a.detail && <small>{a.detail}</small>}</span>
+                <span className="att-source">{a.source}</span>
+                {a.page && <ChevronRight size={16} className="muted" />}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
   );
 }
 
@@ -49,7 +111,7 @@ export function OverviewPage({ meta }: { meta: Meta }) {
 
   return (
     <div className="page">
-      {meta.integrations.unraid && <AppsBar />}
+      <AppsBar unraid={meta.integrations.unraid} />
       <div className="page-head">
         <div><h1>{greeting()}</h1><Clock /></div>
       </div>
@@ -73,24 +135,7 @@ export function OverviewPage({ meta }: { meta: Meta }) {
           )}
 
           <div className="overview-grid">
-          <Card title={data.attention.length ? `Needs attention · ${data.attention.length}` : 'Needs attention'} pad={false}>
-            {data.attention.length === 0 ? (
-              <div className="all-clear"><CheckCircle2 size={22} /> All clear – nothing needs you right now.</div>
-            ) : (
-              <ul className="attention">
-                {data.attention.map((a, i) => (
-                  <li key={i}>
-                    <button onClick={() => a.page && navigate(a.page)} disabled={!a.page}>
-                      <Dot tone={levelTone[a.level]} />
-                      <span className="att-text"><strong>{a.title}</strong>{a.detail && <small>{a.detail}</small>}</span>
-                      <span className="att-source">{a.source}</span>
-                      {a.page && <ChevronRight size={16} className="muted" />}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Card>
+          <Attention items={data.attention} meta={meta} />
 
           <div className="tiles">
             {meta.integrations.unraid && <ServerTile t={data.tiles.server} vms={data.tiles.vms} />}

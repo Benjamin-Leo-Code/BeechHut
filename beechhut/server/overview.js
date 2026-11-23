@@ -15,7 +15,8 @@ export async function buildOverview({ c, config }) {
   ]);
 
   const attention = [];
-  const add = (level, source, title, detail, page) => attention.push({ level, source, title, detail, page });
+  // group: shown behind the Batteries / Updates / Unavailable buttons rather than in the main list.
+  const add = (level, source, title, detail, page, group = null) => attention.push({ level, source, title, detail, page, group });
 
   for (const [name, r] of [['Unraid', system], ['Home Assistant', haStates], ['UniFi', unifi]]) {
     if (r.status === 'error') add('alert', name, `Can't reach ${name}`, r.error, null);
@@ -53,18 +54,28 @@ export async function buildOverview({ c, config }) {
   // Home Assistant
   if (haStates.status === 'ok') {
     const s = haStates.value;
-    const updates = s.filter((e) => e.domain === 'update' && e.state === 'on');
-    for (const u of updates) add('info', 'Home Assistant', `Update: ${u.attrs.title || u.name}`, `${u.attrs.installed_version} → ${u.attrs.latest_version}`, 'home');
-    const low = s.filter((e) => e.deviceClass === 'battery' && e.unit === '%' && Number(e.state) <= (config.homeassistant?.lowBattery ?? 20));
-    for (const b of low) add('warning', 'Home Assistant', `Low battery: ${b.name.replace(/ battery$/i, '')}`, `${b.state}%`, 'home');
-    const unavailable = s.filter((e) => e.state === 'unavailable' && !['button', 'scene', 'event'].includes(e.domain));
-    if (unavailable.length) add('info', 'Home Assistant', `${unavailable.length} unavailable entit${unavailable.length === 1 ? 'y' : 'ies'}`, unavailable.slice(0, 3).map((e) => e.name).join(', '), 'home');
+    for (const u of s.filter((e) => e.domain === 'update' && e.state === 'on')) {
+      add('info', 'Home Assistant', u.attrs.title || u.name.replace(/ update$/i, ''), `${u.attrs.installed_version} → ${u.attrs.latest_version}`, 'home', 'update');
+    }
+    // Low batteries: percentage sensors at or below the threshold, and battery binary sensors reporting "low".
+    const limit = config.homeassistant?.lowBattery ?? 20;
+    const low = [
+      ...s.filter((e) => e.deviceClass === 'battery' && e.unit === '%' && e.state !== '' && Number(e.state) <= limit)
+        .map((e) => ({ e, level: Number(e.state), detail: `${e.state}%` })),
+      ...s.filter((e) => e.domain === 'binary_sensor' && e.deviceClass === 'battery' && e.state === 'on')
+        .map((e) => ({ e, level: -1, detail: 'Low' })),
+    ].sort((a, b) => a.level - b.level);
+    for (const { e, detail } of low) add('warning', 'Home Assistant', e.name.replace(/ battery( level)?$/i, ''), detail, 'home', 'battery');
+    // Every unavailable entity, by name.
+    for (const e of s.filter((x) => x.state === 'unavailable').sort((a, b) => a.name.localeCompare(b.name))) {
+      add('info', 'Home Assistant', e.name, e.id, 'home', 'unavailable');
+    }
   }
 
   // UniFi
   if (unifi.status === 'ok') {
     for (const d of unifi.value.devices.filter((x) => x.state !== 'ONLINE')) add(d.state === 'OFFLINE' ? 'alert' : 'warning', 'UniFi', `${d.name} is ${d.state.toLowerCase().replace(/_/g, ' ')}`, d.model, 'network');
-    for (const d of unifi.value.devices.filter((x) => x.firmwareUpdatable)) add('info', 'UniFi', `Firmware update for ${d.name}`, d.firmware ? `Currently ${d.firmware}` : null, 'network');
+    for (const d of unifi.value.devices.filter((x) => x.firmwareUpdatable)) add('info', 'UniFi', `${d.name} firmware`, d.firmware ? `Currently ${d.firmware}` : 'New firmware available', 'network', 'update');
   }
 
   // Links

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.12.0
+- The apps bar at the top of the Overview now includes your own links as well as running containers, after the containers. A link that isn't responding has a red dot on its icon.
+- Needs attention has a row of buttons for **Batteries**, **Updates** and **Unavailable**, each with a count. Tap one to show just those items (tap again to go back); the chosen button pops out and the others grey out. These items no longer clutter the main list.
+- **Updates** lists every pending update from Home Assistant (Core, OS, apps, HACS, integrations and device firmware) and UniFi device firmware.
+- **Unavailable** lists every unavailable Home Assistant entity by name, instead of just a count.
+- **Batteries** also includes battery sensors that only report low/normal, lowest first.
+
 ## 0.11.1
 - Containers on the phone: the port now shows under the name, below the uptime.
 

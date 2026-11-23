@@ -502,3 +502,24 @@ table.disks { width: 100%; border-collapse: collapse; font-size: 14px; }
   .ctr-row .row-sub { flex-direction: column; gap: 0; }
   .ctr-ports-sm { font-family: var(--mono); font-size: 12px; }
 }
+
+/* ── Apps bar: your own links ─────────────────────────────────────────── */
+.apps-icon { position: relative; display: inline-flex; }
+.apps-down { position: absolute; top: -2px; right: -2px; width: 12px; height: 12px; border-radius: 99px; background: var(--bad); border: 2px solid var(--surface); }
+
+/* ── Needs attention: category buttons ────────────────────────────────── */
+.att-groups { display: flex; gap: 8px; padding: 12px 16px 6px; border-bottom: 1px solid var(--border); }
+.att-groups button {
+  flex: 1; max-width: 120px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 6px 8px;
+  border: 1px solid var(--border); border-radius: 12px; background: var(--surface-2); color: var(--text);
+  font-size: 12px; font-weight: 600; cursor: pointer; transition: transform 0.15s, opacity 0.15s, filter 0.15s, box-shadow 0.15s, background 0.15s;
+}
+.att-groups button:hover { border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); }
+.att-group-icon { position: relative; display: inline-flex; color: var(--accent); }
+.att-count {
+  position: absolute; top: -7px; right: -13px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 99px;
+  background: var(--warn); color: #fff; font-size: 11px; line-height: 18px; text-align: center;
+}
+/* Pressed: the chosen one pops out, the rest grey out. */
+.att-groups.has-active button:not(.active) { opacity: 0.4; filter: grayscale(1); }
+.att-groups button.active { transform: scale(1.1); background: var(--accent-soft); border-color: var(--accent); box-shadow: 0 6px 18px rgb(0 0 0 / 0.14); }
