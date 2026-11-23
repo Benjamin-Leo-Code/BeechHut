@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.17.4
+- Inside BeechHut, the logo next to the title is now just the beach hut, without the green rounded square behind it. The browser tab, home-screen and add-on icons keep the square.
+
 ## 0.17.3
 - Direct access: signing in now goes straight to Home Assistant's plain address (port 80, as Home Assistant OS uses), unless **Home Assistant address (for direct access)** or Home Assistant's own local network address says otherwise. Port 8123 is no longer assumed anywhere.
 

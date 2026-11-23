@@ -113,7 +113,7 @@ if (config.addon) {
   app.addHook('onRequest', async (req, reply) => {
     if (isDirect(req)) {
       const url = req.url.split('?')[0];
-      if (url.startsWith('/auth/') || url === '/icon.svg') return; // sign-in pages and their icon
+      if (url.startsWith('/auth/') || url === '/icon.svg' || url === '/hut.svg') return; // sign-in pages and their icons
       const user = await directAuth.check(req);
       if (user) { req.user = user; return; }
       // Only a page being opened goes to sign-in; anything else (API calls, images) just gets 401,

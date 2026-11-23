@@ -70,7 +70,7 @@ export function App() {
     <div className="shell">
       <aside className="sidebar">
         <a className="brand" href="#/overview">
-          <img src="icon.svg" alt="" width={30} height={30} />
+          <img src="hut.svg" alt="" width={30} height={30} />
           <div><strong>{meta.title}</strong>{meta.subtitle && <small>{meta.subtitle}</small>}</div>
         </a>
         <button className="palette-trigger" onClick={() => setPalette(true)}>
@@ -90,7 +90,7 @@ export function App() {
       </aside>
 
       <header className="topbar">
-        <a className="brand" href="#/overview"><img src="icon.svg" alt="" width={26} height={26} /><strong>{meta.title}</strong></a>
+        <a className="brand" href="#/overview"><img src="hut.svg" alt="" width={26} height={26} /><strong>{meta.title}</strong></a>
         <Button variant="ghost" icon={<Search size={20} />} title="Search" onClick={() => setPalette(true)} />
       </header>
 

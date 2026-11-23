@@ -102,7 +102,7 @@ export function createDirectAuth({ dataDir, haInternalUrl, haBrowserUrl, log }) 
 :root{color-scheme:light dark}body{margin:0;min-height:100vh;display:grid;place-items:center;font:16px/1.5 -apple-system,system-ui,sans-serif;background:#f6f5f1;color:#1d201c}
 @media(prefers-color-scheme:dark){body{background:#141613;color:#e8eae4}}main{max-width:380px;padding:24px;text-align:center}
 img{width:56px;height:56px}h1{font-size:22px;margin:12px 0 6px}p{margin:0 0 18px;opacity:.75}a{display:inline-block;padding:10px 18px;border-radius:10px;background:#2f5d3a;color:#fff;text-decoration:none;font-weight:600}
-</style></head><body><main><img src="/icon.svg" alt=""><h1>${title}</h1>${body}</main></body></html>`;
+</style></head><body><main><img src="/hut.svg" alt=""><h1>${title}</h1>${body}</main></body></html>`;
 
   return {
     COOKIE,
