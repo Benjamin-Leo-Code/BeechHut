@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.13.1
+- **Batteries** in Needs attention now also lists battery sensors that are unavailable (often a flat or missing battery), after the low ones.
+
 ## 0.13.0
 - The apps bar has moved below the greeting, where Quick launch was, and Quick launch is gone: pinned links now go at the front of the apps bar, alongside your favourite containers.
 - The Links page has been removed. Your links are in the apps bar (and the ⌘K search); a link that isn't responding gets a red dot there and shows in Needs attention. Link groups are no longer used; any `group` you've set is ignored.

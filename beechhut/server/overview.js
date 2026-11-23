@@ -57,13 +57,16 @@ export async function buildOverview({ c, config }) {
     for (const u of s.filter((e) => e.domain === 'update' && e.state === 'on')) {
       add('info', 'Home Assistant', u.attrs.title || u.name.replace(/ update$/i, ''), `${u.attrs.installed_version} → ${u.attrs.latest_version}`, 'home', 'update');
     }
-    // Low batteries: percentage sensors at or below the threshold, and battery binary sensors reporting "low".
+    // Low batteries: percentage sensors at or below the threshold, battery binary sensors reporting "low",
+    // and any battery sensor that's unavailable (often a flat battery). Unavailable ones go last.
     const limit = config.homeassistant?.lowBattery ?? 20;
     const low = [
       ...s.filter((e) => e.deviceClass === 'battery' && e.unit === '%' && e.state !== '' && Number(e.state) <= limit)
         .map((e) => ({ e, level: Number(e.state), detail: `${e.state}%` })),
       ...s.filter((e) => e.domain === 'binary_sensor' && e.deviceClass === 'battery' && e.state === 'on')
         .map((e) => ({ e, level: -1, detail: 'Low' })),
+      ...s.filter((e) => e.deviceClass === 'battery' && e.state === 'unavailable')
+        .map((e) => ({ e, level: 1000, detail: 'Unavailable' })),
     ].sort((a, b) => a.level - b.level);
     for (const { e, detail } of low) add('warning', 'Home Assistant', e.name.replace(/ battery( level)?$/i, ''), detail, 'home', 'battery');
     // Every unavailable entity, by name.

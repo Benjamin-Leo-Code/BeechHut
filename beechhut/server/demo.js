@@ -80,6 +80,7 @@ const entities = [
   sensor('sensor.shed_temperature', 'Shed temperature', 'unavailable', '°C', 'temperature'),
   sensor('switch.garden_lights', 'Garden lights', 'unavailable', null, null),
   sensor('binary_sensor.smoke_alarm_battery', 'Smoke alarm battery', 'on', null, 'battery'),
+  sensor('sensor.landing_sensor_battery', 'Landing sensor battery', 'unavailable', '%', 'battery'),
 ];
 
 const uDevices = [
