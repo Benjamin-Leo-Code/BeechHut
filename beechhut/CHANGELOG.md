@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.17.1
+- Direct access: signing in now goes to Home Assistant on the port it actually runs on (for example 80), rather than assuming 8123, when Home Assistant has no local network address set. The port is written to the add-on's Log tab.
+
 ## 0.17.0
 - **Direct access**: BeechHut can have its own address, e.g. `http://<home-assistant-ip>:8098`, as well as the sidebar. It's off until you set a port on the Configuration tab's **Network** section. You sign in with your Home Assistant account (administrators only) and stay signed in for up to 30 days; **Sign out** is in the sidebar, or in **More** on a phone.
 - New optional setting **Home Assistant address (for direct access)**, for when signing in sends you to the wrong address.

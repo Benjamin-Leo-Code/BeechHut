@@ -76,20 +76,31 @@ const DIRECT_PORT = Number(process.env.BEECHHUT_DIRECT_PORT || 8098);
 const isDirect = (req) => config.addon && req.socket.localPort === DIRECT_PORT;
 await app.register(fastifyCookie);
 
-// Home Assistant as BeechHut's server sees it (for swapping sign-in codes for tokens).
-let haInternal = null;
-async function haInternalUrl() {
-  if (process.env.BEECHHUT_HA_DIRECT) return process.env.BEECHHUT_HA_DIRECT;
-  if (!haInternal) {
+// The port Home Assistant actually runs on (and whether it uses https), from the Supervisor.
+let coreInfo = null;
+async function haCore() {
+  if (!coreInfo) {
     try {
       const r = await request('http://supervisor/core/info', { headers: { authorization: `Bearer ${process.env.SUPERVISOR_TOKEN}` } });
-      haInternal = `${r.data?.ssl ? 'https' : 'http'}://homeassistant:${r.data?.port || 8123}`;
-    } catch { return 'http://homeassistant:8123'; }
+      coreInfo = { port: Number(r.data?.port) || 8123, ssl: Boolean(r.data?.ssl) };
+      console.log(`[Direct access] Home Assistant runs on port ${coreInfo.port}${coreInfo.ssl ? ' (https)' : ''}`);
+    } catch (e) {
+      console.log(`[Direct access] couldn’t ask the Supervisor for Home Assistant’s port (${e.message}); assuming 8123`);
+      return { port: 8123, ssl: false };
+    }
   }
-  return haInternal;
+  return coreInfo;
+}
+const scheme = (c) => (c.ssl ? 'https' : 'http');
+
+// Home Assistant as BeechHut's server sees it (for swapping sign-in codes for tokens).
+async function haInternalUrl() {
+  if (process.env.BEECHHUT_HA_DIRECT) return process.env.BEECHHUT_HA_DIRECT;
+  const c = await haCore();
+  return `${scheme(c)}://homeassistant:${c.port}`;
 }
 // Home Assistant as the browser sees it (for its sign-in page): the setting, else HA's own
-// internal URL, else the same machine the browser reached BeechHut on, port 8123.
+// internal URL, else the same machine the browser reached BeechHut on, on HA's own port.
 let haInternalBrowser;
 async function haBrowserUrl(req) {
   if (config.homeAssistantUrl) return config.homeAssistantUrl;
@@ -98,7 +109,9 @@ async function haBrowserUrl(req) {
   }
   if (haInternalBrowser) return haInternalBrowser.replace(/\/+$/, '');
   const host = String(req.headers['x-forwarded-host'] || req.headers.host || '').replace(/:\d+$/, '');
-  return `http://${host}:8123`;
+  const c = await haCore();
+  const usual = (c.ssl && c.port === 443) || (!c.ssl && c.port === 80);
+  return `${scheme(c)}://${host}${usual ? '' : `:${c.port}`}`;
 }
 const directAuth = config.addon ? createDirectAuth({ dataDir: DATA_DIR, haInternalUrl, haBrowserUrl, log: (m) => console.log(`[Direct access] ${m}`) }) : null;
 
