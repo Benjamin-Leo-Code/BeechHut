@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.17.3
+- Direct access: signing in now goes straight to Home Assistant's plain address (port 80, as Home Assistant OS uses), unless **Home Assistant address (for direct access)** or Home Assistant's own local network address says otherwise. Port 8123 is no longer assumed anywhere.
+
 ## 0.17.2
 - Direct access: before sending you to sign in, BeechHut checks where Home Assistant actually answers – the plain address (newer Home Assistant OS installs use port 80, with no number) or its own port – and uses that. The address it found is written to the Log tab.
 
