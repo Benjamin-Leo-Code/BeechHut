@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.13.0
+- The apps bar has moved below the greeting, where Quick launch was, and Quick launch is gone: pinned links now go at the front of the apps bar, alongside your favourite containers.
+- The Links page has been removed. Your links are in the apps bar (and the ⌘K search); a link that isn't responding gets a red dot there and shows in Needs attention. Link groups are no longer used; any `group` you've set is ignored.
+
 ## 0.12.0
 - The apps bar at the top of the Overview now includes your own links as well as running containers, after the containers. A link that isn't responding has a red dot on its icon.
 - Needs attention has a row of buttons for **Batteries**, **Updates** and **Unavailable**, each with a count. Tap one to show just those items (tap again to go back); the chosen button pops out and the others grey out. These items no longer clutter the main list.

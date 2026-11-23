@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import {
-  LayoutGrid, Boxes, Server, House, Network, Link2, NotebookPen, Search, MoreHorizontal, Command, Box, Images,
+  LayoutGrid, Boxes, Server, House, Network, NotebookPen, Search, MoreHorizontal, Command, Box, Images,
 } from 'lucide-react';
 import { useApi } from './api';
 import { navigate, useRoute } from './router';
@@ -12,7 +12,6 @@ import { ContainersPage } from './pages/Containers';
 import { ServerPage } from './pages/Server';
 import { HomePage } from './pages/Home';
 import { NetworkPage } from './pages/Network';
-import { LinksPage } from './pages/Links';
 import { NotesPage } from './pages/Notes';
 import { PhotosPage } from './pages/Photos';
 
@@ -27,13 +26,12 @@ export const NAV: { page: Page; label: string; icon: ReactNode; mobile?: boolean
   { page: 'network', label: 'Network', icon: <Network size={20} />, mobile: true },
   { page: 'plan', label: 'House Plan', icon: <Box size={20} /> },
   { page: 'photos', label: 'Photo uploader', icon: <Images size={20} /> },
-  { page: 'links', label: 'Links', icon: <Link2 size={20} /> },
   { page: 'notes', label: 'Notes', icon: <NotebookPen size={20} /> },
 ];
 
 const PAGES: Record<Page, (p: { meta: Meta }) => ReactNode> = {
   overview: OverviewPage, containers: ContainersPage, server: ServerPage, home: HomePage,
-  network: NetworkPage, plan: HousePlanPage, photos: PhotosPage, links: LinksPage, notes: NotesPage,
+  network: NetworkPage, plan: HousePlanPage, photos: PhotosPage, notes: NotesPage,
 };
 
 export function App() {

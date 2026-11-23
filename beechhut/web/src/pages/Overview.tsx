@@ -23,30 +23,32 @@ function Clock() {
   );
 }
 
-/** Every running container that has a web UI (favourites first), then your own links – one tap to open. */
+type BarItem = { key: string; name: string; url: string; icon: string | null; first: boolean; down: boolean };
+
+/**
+ * One tap to open: every running container with a web UI and all your own links.
+ * Favourite containers and pinned links come first; then the other containers, then the other links.
+ */
 function AppsBar({ unraid }: { unraid: boolean }) {
   const { data } = useApi<Container[]>(unraid ? '/containers' : null, 10000);
   const links = useApi<LinkGroup[]>('/links', 60000);
-  const apps = (data || [])
+  const apps: BarItem[] = (data || [])
     .filter((c) => c.state === 'running' && c.url)
-    .sort((a, b) => Number(b.favourite) - Number(a.favourite) || a.name.localeCompare(b.name));
-  const own = (links.data || []).flatMap((g) => g.items);
-  if (!apps.length && !own.length) return null;
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((c) => ({ key: c.id, name: c.name, url: c.url!, icon: c.icon, first: c.favourite, down: false }));
+  const own: BarItem[] = (links.data || []).flatMap((g) => g.items)
+    .map((l) => ({ key: l.url, name: l.name, url: l.url, icon: l.icon, first: l.pinned, down: Boolean(l.health && !l.health.up) }));
+  const items = [...apps.filter((x) => x.first), ...own.filter((x) => x.first), ...apps.filter((x) => !x.first), ...own.filter((x) => !x.first)];
+  if (!items.length) return null;
   return (
     <nav className="apps-bar" aria-label="Apps and links">
-      {apps.map((c) => (
-        <a key={c.id} href={c.url!} target="_blank" rel="noreferrer" title={`Open ${c.name}`}>
-          <AppIcon src={c.icon} name={c.name} size={40} />
-          <span>{c.name}</span>
-        </a>
-      ))}
-      {own.map((l) => (
-        <a key={l.url} href={l.url} target="_blank" rel="noreferrer" title={l.health && !l.health.up ? `${l.name} isn’t responding` : `Open ${l.name}`}>
+      {items.map((x) => (
+        <a key={x.key} href={x.url} target="_blank" rel="noreferrer" title={x.down ? `${x.name} isn’t responding` : `Open ${x.name}`}>
           <span className="apps-icon">
-            <AppIcon src={l.icon} name={l.name} size={40} />
-            {l.health && !l.health.up && <span className="apps-down" aria-label="Not responding" />}
+            <AppIcon src={x.icon} name={x.name} size={40} />
+            {x.down && <span className="apps-down" aria-label="Not responding" />}
           </span>
-          <span>{l.name}</span>
+          <span>{x.name}</span>
         </a>
       ))}
     </nav>
@@ -111,29 +113,14 @@ export function OverviewPage({ meta }: { meta: Meta }) {
 
   return (
     <div className="page">
-      <AppsBar unraid={meta.integrations.unraid} />
       <div className="page-head">
         <div><h1>{greeting()}</h1><Clock /></div>
       </div>
+      <AppsBar unraid={meta.integrations.unraid} />
       <ErrorNote error={error} what="the overview" />
       {loading && <Loading rows={4} />}
       {data && (
         <>
-          {data.pinned.length > 0 && (
-            <section>
-              <h2 className="section-title">Quick launch</h2>
-              <div className="launch-grid">
-                {data.pinned.map((l) => (
-                  <a key={l.url} href={l.url} target="_blank" rel="noreferrer" className="launch" title={l.name}>
-                    <AppIcon src={l.icon} name={l.name} size={32} />
-                    <span>{l.name}</span>
-                    {(l.health || l.running !== undefined) && <Dot tone={(l.health ? l.health.up : l.running) ? 'ok' : 'bad'} />}
-                  </a>
-                ))}
-              </div>
-            </section>
-          )}
-
           <div className="overview-grid">
           <Attention items={data.attention} meta={meta} />
 

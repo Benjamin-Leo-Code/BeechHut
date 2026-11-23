@@ -23,14 +23,15 @@ This needs UniFi Network 9 or later. If you run the UniFi Network Application yo
 
 ### Links
 
-Add bookmarks under **Links**. Each one has a name and a URL, plus these optional fields:
+Add your own links under **Links**. They appear in the apps bar on the overview, after the running containers. Each one has a name and a URL, plus these optional fields:
 
 | Field | What it does |
 | --- | --- |
-| `group` | Groups links together on the Links page |
 | `icon` | A name from [dashboardicons.com](https://dashboardicons.com) (e.g. `plex`) or an image URL |
-| `pinned` | Puts the link in Quick launch on the overview |
-| `check` | Set to `false` to skip the up/down check |
+| `pinned` | Puts the link at the front of the apps bar, alongside your favourite containers |
+| `check` | Set to `false` to skip the up/down check. Links that don't respond get a red dot in the apps bar and show in Needs attention |
+
+Links are checked whenever the overview loads (at most every 30 seconds) and every minute while it's open.
 
 Example in YAML mode:
 
@@ -39,11 +40,9 @@ links:
   - name: Unraid
     url: http://tower.local
     icon: unraid
-    group: Infrastructure
     pinned: true
   - name: Bin collections
     url: https://www.gov.uk/rubbish-collection-day
-    group: Household
     check: false
 ```
 
@@ -51,7 +50,7 @@ links:
 
 | Option | What it does |
 | --- | --- |
-| Favourite containers | Container names to show first in the apps bar at the top of the overview |
+| Favourite containers | Container names to show first in the apps bar on the overview |
 | Hidden containers / Hidden entities | Things to leave out. For entities, end with `*` to match a prefix (e.g. `sensor.sun_*`) |
 | Home Assistant VM name | The name of this VM in Unraid, so the overview can show it |
 | Low battery threshold | Battery sensors at or below this % are flagged |
@@ -106,7 +105,7 @@ BeechHut saves each photo straight into the folder as `YYYY-MM-DD-HHMMSS-<random
 
 ### Advanced
 
-For anything the Configuration tab doesn't cover, such as overriding a container's link or grouping links in YAML, create `config.yaml` in this add-on's config folder: `/addon_configs/<id>_beechhut/` on the host, which the File editor or Studio Code Server add-on can reach. See `config.example.yaml` in the repository.
+For anything the Configuration tab doesn't cover, such as overriding a container's link or setting links in YAML, create `config.yaml` in this add-on's config folder: `/addon_configs/<id>_beechhut/` on the host, which the File editor or Studio Code Server add-on can reach. See `config.example.yaml` in the repository.
 
 ## Access and security
 

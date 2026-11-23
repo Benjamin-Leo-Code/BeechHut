@@ -116,6 +116,6 @@ export function loadConfig() {
       dir: photoFrameDir(process.env.BEECHHUT_PHOTO_FRAME_FOLDER || pick(o.photo_frame_folder, y.photo_frame?.folder)),
       aspect: aspectOf(pick(o.photo_frame_shape, y.photo_frame?.shape)),
     },
-    links: !blank(o.links) ? groupLinks(o.links) : Array.isArray(y.links) ? y.links : [],
+    links: !blank(o.links) ? groupLinks(o.links) : Array.isArray(y.links) ? (y.links.some((l) => l?.url) ? groupLinks(y.links) : y.links) : [],
   };
 }

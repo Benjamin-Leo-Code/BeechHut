@@ -80,18 +80,15 @@ export async function buildOverview({ c, config }) {
 
   // Links
   if (links.status === 'ok') {
-    for (const l of links.value.flatMap((g) => g.items)) if (l.health && !l.health.up) add('warning', 'Links', `${l.name} isn't responding`, l.health.error || `HTTP ${l.health.status}`, 'links');
+    for (const l of links.value.flatMap((g) => g.items)) if (l.health && !l.health.up) add('warning', 'Links', `${l.name} isn't responding`, l.health.error || `HTTP ${l.health.status}`, null);
   }
 
   const order = { alert: 0, warning: 1, info: 2 };
   attention.sort((a, b) => order[a.level] - order[b.level]);
 
-  const pinned = links.status === 'ok' ? links.value.flatMap((g) => g.items).filter((l) => l.pinned) : [];
-
   const ha = haStates.status === 'ok' ? haStates.value : [];
   return {
     attention,
-    pinned,
     tiles: {
       server: system.status === 'ok' ? {
         ...system.value,

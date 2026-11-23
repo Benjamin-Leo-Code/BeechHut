@@ -14,8 +14,20 @@ unifi:
   webUrl: https://unifi.ui.com
   insecure: true
 
-# Links can be grouped here instead of (not as well as) on the Configuration tab.
+# Links can be set here instead of (not as well as) on the Configuration tab.
 # `check: false` skips the up/down check; `check` can also be a different URL to probe.
+links:
+  - name: Unraid
+    url: http://tower.local
+    icon: unraid
+    pinned: true
+  - name: UniFi
+    url: https://192.168.1.1
+    icon: unifi
+    pinned: true
+  - name: Bin collections
+    url: https://www.gov.uk/rubbish-collection-day
+    check: false` skips the up/down check; `check` can also be a different URL to probe.
 links:
   - name: Infrastructure
     items:

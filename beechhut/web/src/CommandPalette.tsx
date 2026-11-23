@@ -27,7 +27,7 @@ export function CommandPalette({ meta, onClose }: { meta: Meta; onClose: () => v
       if (url) out.push({ id: `web:${key}`, title: `Open ${label}`, hint: url, icon: <ExternalLink size={18} />, run: () => void open(url, '_blank') });
     }
     for (const g of links.data || []) for (const l of g.items) {
-      out.push({ id: `link:${l.url}`, title: l.name, hint: `${g.name} · ${l.url}`, icon: <AppIcon src={l.icon} name={l.name} size={20} />, run: () => void open(l.url, '_blank') });
+      out.push({ id: `link:${l.url}`, title: l.name, hint: l.url, icon: <AppIcon src={l.icon} name={l.name} size={20} />, run: () => void open(l.url, '_blank') });
     }
     for (const c of containers.data || []) {
       if (c.url) out.push({ id: `ct-open:${c.id}`, title: `Open ${c.name}`, hint: c.url, icon: <AppIcon src={c.icon} name={c.name} size={20} />, run: () => void open(c.url!, '_blank'), keywords: 'container app' });

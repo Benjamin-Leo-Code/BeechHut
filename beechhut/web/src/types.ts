@@ -1,5 +1,5 @@
 export type Level = 'alert' | 'warning' | 'info';
-export type Page = 'overview' | 'containers' | 'server' | 'home' | 'network' | 'plan' | 'photos' | 'links' | 'notes';
+export type Page = 'overview' | 'containers' | 'server' | 'home' | 'network' | 'plan' | 'photos' | 'notes';
 
 export interface Meta {
   title: string;
@@ -66,7 +66,6 @@ export interface AttentionItem { level: Level; source: string; title: string; de
 type Tile<T> = T | { error?: string; off?: boolean };
 export interface Overview {
   attention: AttentionItem[];
-  pinned: Link[];
   tiles: {
     server: Tile<SystemInfo & { array: { state: string; total: number | null; used: number | null; free: number | null } | null }>;
     containers: Tile<{ running: number; total: number }>;

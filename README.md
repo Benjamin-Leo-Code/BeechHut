@@ -8,14 +8,13 @@ It's meant for running the house, so you can act on things from it as well as lo
 
 | Page | What you can do |
 | --- | --- |
-| **Overview** | An **apps bar** along the top with every running container that has a web UI, then your own links, one tap to open. Below it, a **Needs attention** list across every system: disks with errors or running hot, stopped autostart containers, offline UniFi devices, links that aren't responding. Buttons above the list show **Batteries** (low batteries), **Updates** (Home Assistant and UniFi) and **Unavailable** (Home Assistant entities) on their own. Plus quick launch for pinned links and a summary card for each system. |
+| **Overview** | An **apps bar** with every running container that has a web UI and all your own links, one tap to open (favourites and pinned links first). Below it, a **Needs attention** list across every system: disks with errors or running hot, stopped autostart containers, offline UniFi devices, links that aren't responding. Buttons above the list show **Batteries** (low batteries), **Updates** (Home Assistant and UniFi) and **Unavailable** (Home Assistant entities) on their own. Plus a summary card for each system. |
 | **Containers** | Start, stop and restart your Unraid containers and open their web UIs. |
 | **Server** | Unraid CPU, RAM, array capacity, per-disk usage, temperatures and errors, and unread notifications. Start, shut down, reboot or force-stop VMs. |
 | **Home** | Lights, switches, heating, locks, covers, scenes, scripts and automations, all controllable. You can also install updates, check the config, restart HA and search every entity. |
 | **Network** | WAN throughput, UniFi devices (with CPU, memory and a restart button) and every client, searchable by name, IP or MAC. |
 | **House Plan** | The whole house in 3D, floating on the page, built from LiDAR scans. Spin it round, zoom in, look from above, cut the walls down to see inside, and tap things to identify them. The plan (`plan.json` plus the model files) is a folder served by Home Assistant (e.g. from its `www` folder) that BeechHut loads directly. See the add-on's Documentation tab. |
 | **Photo uploader** | Add photos to a digital photo frame from your phone, each cropped to the frame's exact shape (drag, pinch to zoom), and see, re-crop or delete the ones already there. Photos are saved to a folder in Home Assistant's config folder, such as one under `www`. |
-| **Links** | Grouped bookmarks with live up/down checks. Container web UIs are added automatically. |
 | **Notes** | House notes: boiler service dates, where the stopcock is, to-dos. |
 
 Press **⌘K** (or `/`) to search and run anything, for example "restart plex", "kitchen" to toggle a light, or "open unifi". Anything that changes something asks you to confirm first.

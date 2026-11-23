@@ -52,4 +52,4 @@ configuration:
     description: The frame's width:height, e.g. 16:9. Photos are cropped to this shape. Leave blank for 238:162.
   links:
     name: Links
-    description: Bookmarks. Icon is a name from dashboardicons.com (e.g. plex) or an image URL. Pinned links go in Quick launch.
+    description: Your own links, shown in the apps bar on the overview. Icon is a name from dashboardicons.com (e.g. plex) or an image URL. Pinned links go at the front.
