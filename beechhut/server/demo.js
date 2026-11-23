@@ -139,8 +139,14 @@ export const demo = {
   homeassistant: {
     async info() { return { version: '2026.10.4', name: 'Beech', state: 'RUNNING', safeMode: false }; },
     async states() { return structuredClone(entities); },
-    async unavailableDevices() {
-      return { 'sensor.boiler_pressure': 'Boiler', 'sensor.shed_temperature': 'Shed sensor', 'sensor.landing_sensor_battery': 'Landing sensor', 'switch.garden_lights': 'Garden lights', 'sensor.shed_sensor_humidity': 'Shed sensor' };
+    async entityContext() {
+      const c = (device, area) => ({ device, area, deviceArea: area });
+      return {
+        'sensor.boiler_pressure': c('Boiler', 'Utility room'), 'sensor.shed_temperature': c('Shed sensor', 'Shed'),
+        'sensor.shed_sensor_humidity': c('Shed sensor', 'Shed'), 'switch.garden_lights': c('Garden lights', 'Garden'),
+        'sensor.landing_sensor_battery': c('Landing sensor', 'Landing'), 'sensor.front_door_battery': c('Front door lock', 'Hall'),
+        'sensor.hallway_motion_battery': c('Hallway motion', 'Hall'), 'binary_sensor.smoke_alarm_battery': c('Smoke alarm', 'Kitchen'),
+      };
     },
     async callService(domain, service, data = {}) {
       await wait(250);

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.16.0
+- **Batteries** shows the room (Home Assistant area) each battery sensor is in, and **Unavailable** shows each device's room next to its name.
+- **Updates**: Home Assistant updates have an **Install** button (it asks first). UniFi firmware updates still open the Network page.
+
 ## 0.15.0
 - **Unavailable** in Needs attention now groups entities by the device they belong to, in collapsible sections that start closed. Each section shows how many of that device's entities are unavailable; entities that aren't part of a device are grouped at the end.
 - Inside a device's section, the device name is dropped from the start of each entity's name (e.g. *Humidity* under *Shed sensor*).

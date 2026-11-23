@@ -188,9 +188,9 @@ a.btn[disabled] { pointer-events: none; opacity: 0.4; }
 /* ── Overview ──────────────────────────────────────────────────────────── */
 .attention { list-style: none; margin: 0; padding: 4px 0; }
 .attention li + li { border-top: 1px solid var(--border); }
-.attention button { display: flex; align-items: center; gap: 12px; width: 100%; padding: 11px 16px; border: 0; background: none; text-align: left; cursor: pointer; }
-.attention button:hover:not(:disabled) { background: var(--surface-2); }
-.attention button:disabled { cursor: default; }
+.attention button:not(.btn) { display: flex; align-items: center; gap: 12px; width: 100%; padding: 11px 16px; border: 0; background: none; text-align: left; cursor: pointer; }
+.attention button:not(.btn):hover:not(:disabled) { background: var(--surface-2); }
+.attention button:not(.btn):disabled { cursor: default; }
 .att-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .att-text strong { font-weight: 550; }
 .att-text small { color: var(--muted); font-size: 13px; }
@@ -533,3 +533,7 @@ table.disks { width: 100%; border-collapse: collapse; font-size: 14px; }
 .att-device-count { min-width: 22px; height: 22px; padding: 0 7px; border-radius: 99px; background: var(--surface-2); border: 1px solid var(--border); color: var(--muted); font-size: 12px; line-height: 20px; text-align: center; }
 .att-device .attention { padding: 0 0 4px; border-top: 1px solid var(--border); background: color-mix(in srgb, var(--surface-2) 50%, var(--surface)); }
 .att-device .attention button { padding-left: 42px; }
+.att-row { display: flex; align-items: center; gap: 12px; padding: 9px 16px; }
+.att-row .btn { flex: none; }
+.att-device-name small { margin-left: 8px; font-weight: 400; color: var(--muted); font-size: 13px; }
+@media (max-width: 760px) { .att-row .att-source { display: none; } }

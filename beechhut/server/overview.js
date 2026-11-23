@@ -9,14 +9,15 @@ const settle = async (fn) => {
 };
 
 export async function buildOverview({ c, config }) {
-  const [containers, system, array, vms, unraidNotes, haStates, haInfo, unifi, links, haDevices] = await Promise.all([
+  const [containers, system, array, vms, unraidNotes, haStates, haInfo, unifi, links, haContext] = await Promise.all([
     settle(c.containers), settle(c.system), settle(c.array), settle(c.vms), settle(c.unraidNotifications),
-    settle(c.haStates), settle(c.haInfo), settle(c.unifi), settle(c.links), settle(c.haDevices),
+    settle(c.haStates), settle(c.haInfo), settle(c.unifi), settle(c.links), settle(c.haContext),
   ]);
 
   const attention = [];
   // group: shown behind the Batteries / Updates / Unavailable buttons rather than in the main list.
-  const add = (level, source, title, detail, page, group = null, device = null) => attention.push({ level, source, title, detail, page, group, device });
+  // extra: device, room, entity (for an Install button), installing.
+  const add = (level, source, title, detail, page, group = null, extra = {}) => attention.push({ level, source, title, detail, page, group, ...extra });
 
   for (const [name, r] of [['Unraid', system], ['Home Assistant', haStates], ['UniFi', unifi]]) {
     if (r.status === 'error') add('alert', name, `Can't reach ${name}`, r.error, null);
@@ -54,8 +55,11 @@ export async function buildOverview({ c, config }) {
   // Home Assistant
   if (haStates.status === 'ok') {
     const s = haStates.value;
+    // Device and room for batteries and unavailable entities. If the lookup fails, they're listed without.
+    const ctx = haContext.status === 'ok' ? haContext.value : {};
     for (const u of s.filter((e) => e.domain === 'update' && e.state === 'on')) {
-      add('info', 'Home Assistant', u.attrs.title || u.name.replace(/ update$/i, ''), `${u.attrs.installed_version} → ${u.attrs.latest_version}`, 'home', 'update');
+      add('info', 'Home Assistant', u.attrs.title || u.name.replace(/ update$/i, ''), `${u.attrs.installed_version} → ${u.attrs.latest_version}`, 'home', 'update',
+        { entity: u.id, installing: Boolean(u.attrs.in_progress) });
     }
     // Low batteries: percentage sensors at or below the threshold, battery binary sensors reporting "low",
     // and any battery sensor that's unavailable (often a flat battery). Unavailable ones go last.
@@ -68,15 +72,15 @@ export async function buildOverview({ c, config }) {
       ...s.filter((e) => e.deviceClass === 'battery' && e.state === 'unavailable')
         .map((e) => ({ e, level: 1000, detail: 'Unavailable' })),
     ].sort((a, b) => a.level - b.level);
-    for (const { e, detail } of low) add('warning', 'Home Assistant', e.name.replace(/ battery( level)?$/i, ''), detail, 'home', 'battery');
+    for (const { e, detail } of low) add('warning', 'Home Assistant', e.name.replace(/ battery( level)?$/i, ''), detail, 'home', 'battery', { room: ctx[e.id]?.area || null });
     // Every unavailable entity (batteries are already under Batteries), with the device it belongs to.
     // If the device lookup fails, they're simply listed without devices.
-    const devices = haDevices.status === 'ok' ? haDevices.value : {};
     for (const e of s.filter((x) => x.state === 'unavailable' && x.deviceClass !== 'battery').sort((a, b) => a.name.localeCompare(b.name))) {
-      const device = devices[e.id] || null;
+      const device = ctx[e.id]?.device || null;
       // HA names entities "<device> <entity>"; inside a device group the device part is redundant.
       const short = device && e.name.toLowerCase().startsWith(`${device.toLowerCase()} `) ? e.name.slice(device.length + 1) : e.name;
-      add('info', 'Home Assistant', short.charAt(0).toUpperCase() + short.slice(1), e.id, 'home', 'unavailable', device);
+      add('info', 'Home Assistant', short.charAt(0).toUpperCase() + short.slice(1), e.id, 'home', 'unavailable',
+        { device, room: (device ? ctx[e.id]?.deviceArea : ctx[e.id]?.area) || null });
     }
   }
 

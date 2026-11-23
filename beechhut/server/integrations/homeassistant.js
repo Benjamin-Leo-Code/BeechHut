@@ -44,20 +44,27 @@ export function createHomeAssistant(cfg) {
       await api(`/services/${domain}/${service}`, { method: 'POST', body: data, timeout: 30000 });
       return { ok: true };
     },
-    /** The device each unavailable entity belongs to, as { entity_id: device name }, via HA's template API. */
-    async unavailableDevices() {
+    /**
+     * Device and room (area) for every unavailable entity and every battery sensor, via HA's template API:
+     * { entity_id: { device, area, deviceArea } }. area is the entity's room (or its device's, if the
+     * entity has none of its own); deviceArea is the device's room.
+     */
+    async entityContext() {
       const template = [
         '{%- set ns = namespace(out=[]) -%}',
-        "{%- for s in states if s.state == 'unavailable' -%}",
+        "{%- for s in states if s.state == 'unavailable' or s.attributes.device_class == 'battery' -%}",
         '{%- set d = device_id(s.entity_id) -%}',
-        "{%- set ns.out = ns.out + [[s.entity_id, ((device_attr(d, 'name_by_user') or device_attr(d, 'name') or '') if d else '')]] -%}",
+        "{%- set ns.out = ns.out + [[s.entity_id, ((device_attr(d, 'name_by_user') or device_attr(d, 'name') or '') if d else ''),",
+        " (area_name(s.entity_id) or ''), ((area_name(d) or '') if d else '')]] -%}",
         '{%- endfor -%}',
         '{{ ns.out | tojson }}',
       ].join('');
-      let pairs = await api('/template', { method: 'POST', body: { template }, timeout: 15000 });
-      if (typeof pairs === 'string') pairs = JSON.parse(pairs);
+      let rows = await api('/template', { method: 'POST', body: { template }, timeout: 15000 });
+      if (typeof rows === 'string') rows = JSON.parse(rows);
       const map = {};
-      for (const [id, name] of Array.isArray(pairs) ? pairs : []) if (id && name) map[id] = String(name);
+      for (const [id, device, area, deviceArea] of Array.isArray(rows) ? rows : []) {
+        if (id) map[id] = { device: device || null, area: area || null, deviceArea: deviceArea || null };
+      }
       return map;
     },
     async checkConfig() {

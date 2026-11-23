@@ -1,8 +1,8 @@
 import { CheckCircle2, ChevronRight, Thermometer, Lightbulb, Download, Wifi, Server, Boxes, House, Network, Monitor, BatteryLow, Unplug, AlertTriangle } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
-import { useApi } from '../api';
+import { api, refresh, useApi } from '../api';
 import { navigate } from '../router';
-import { AppIcon, Bar, Card, Dot, ErrorNote, Loading, type Tone } from '../ui';
+import { AppIcon, Bar, Button, Card, Dot, ErrorNote, Loading, confirm, useAction, type Tone } from '../ui';
 import { bitrate, kib, pct, since } from '../format';
 import type { AttentionGroup, AttentionItem, Container, LinkGroup, Meta, Overview } from '../types';
 
@@ -99,18 +99,45 @@ function Attention({ items, meta }: { items: AttentionItem[]; meta: Meta }) {
 }
 
 function AttentionList({ items, keyPrefix }: { items: AttentionItem[]; keyPrefix: string }) {
+  const { busy, run } = useAction();
+  const [started, setStarted] = useState<Set<string>>(new Set());
+
+  async function install(a: AttentionItem) {
+    if (!(await confirm({ title: `Install ${a.title}?`, body: a.detail || undefined, action: 'Install' }))) return;
+    const ok = await run(a.entity!, () => api('/ha/service', { body: { domain: 'update', service: 'install', data: { entity_id: a.entity } } }), `Installing ${a.title}…`);
+    if (ok) { setStarted((s) => new Set(s).add(a.entity!)); refresh('/overview'); }
+  }
+
   return (
     <ul className="attention">
-      {items.map((a, i) => (
-        <li key={`${keyPrefix}-${i}`}>
-          <button onClick={() => a.page && navigate(a.page)} disabled={!a.page}>
-            <Dot tone={levelTone[a.level]} />
-            <span className="att-text"><strong>{a.title}</strong>{a.detail && <small>{a.detail}</small>}</span>
-            <span className="att-source">{a.source}</span>
-            {a.page && <ChevronRight size={16} className="muted" />}
-          </button>
-        </li>
-      ))}
+      {items.map((a, i) => {
+        const text = <span className="att-text"><strong>{a.title}</strong>{a.detail && <small>{a.detail}</small>}</span>;
+        // Home Assistant updates get an Install button instead of a link to the Home page.
+        if (a.entity) {
+          const installing = a.installing || started.has(a.entity);
+          return (
+            <li key={`${keyPrefix}-${i}`}>
+              <div className="att-row">
+                <Dot tone={levelTone[a.level]} />
+                {text}
+                <span className="att-source">{a.source}</span>
+                <Button small variant="primary" icon={<Download size={14} />} busy={busy === a.entity || installing}
+                  onClick={() => install(a)}>{installing ? 'Installing…' : 'Install'}</Button>
+              </div>
+            </li>
+          );
+        }
+        return (
+          <li key={`${keyPrefix}-${i}`}>
+            <button onClick={() => a.page && navigate(a.page)} disabled={!a.page}>
+              <Dot tone={levelTone[a.level]} />
+              {text}
+              <span className="att-source">{a.room ?? a.source}</span>
+              {a.page && <ChevronRight size={16} className="muted" />}
+            </button>
+          </li>
+        );
+      })}
     </ul>
   );
 }
@@ -131,10 +158,10 @@ function ByDevice({ items }: { items: AttentionItem[] }) {
         <details key={name} className="att-device">
           <summary>
             <ChevronRight size={16} className="att-chevron" />
-            <span className="att-device-name">{name}</span>
+            <span className="att-device-name">{name}{groups.get(name)![0].room && <small>{groups.get(name)![0].room}</small>}</span>
             <span className="att-device-count">{groups.get(name)!.length}</span>
           </summary>
-          <AttentionList items={groups.get(name)!} keyPrefix={name} />
+          <AttentionList items={groups.get(name)!.map((a) => ({ ...a, room: null }))} keyPrefix={name} />
         </details>
       ))}
     </div>
