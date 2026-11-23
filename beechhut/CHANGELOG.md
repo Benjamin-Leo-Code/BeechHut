@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.15.0
+- **Unavailable** in Needs attention now groups entities by the device they belong to, in collapsible sections that start closed. Each section shows how many of that device's entities are unavailable; entities that aren't part of a device are grouped at the end.
+- Inside a device's section, the device name is dropped from the start of each entity's name (e.g. *Humidity* under *Shed sensor*).
+
 ## 0.14.0
 - Needs attention has a fourth button, **Needs attention**, first in the row. It's selected when the page opens and shows everything that isn't under Batteries, Updates or Unavailable.
 - One button is always selected: tap another to switch to it. The selected one stands out and the others are greyed.

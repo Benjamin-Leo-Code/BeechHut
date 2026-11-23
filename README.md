@@ -8,7 +8,7 @@ It's meant for running the house, so you can act on things from it as well as lo
 
 | Page | What you can do |
 | --- | --- |
-| **Overview** | An **apps bar** with every running container that has a web UI and all your own links, one tap to open (favourites and pinned links first). Below it, a **Needs attention** list across every system: disks with errors or running hot, stopped autostart containers, offline UniFi devices, links that aren't responding. Buttons above the list switch between **Needs attention** (everything else, shown first), **Batteries** (low or unavailable batteries), **Updates** (Home Assistant and UniFi) and **Unavailable** (Home Assistant entities). Plus a summary card for each system. |
+| **Overview** | An **apps bar** with every running container that has a web UI and all your own links, one tap to open (favourites and pinned links first). Below it, a **Needs attention** list across every system: disks with errors or running hot, stopped autostart containers, offline UniFi devices, links that aren't responding. Buttons above the list switch between **Needs attention** (everything else, shown first), **Batteries** (low or unavailable batteries), **Updates** (Home Assistant and UniFi) and **Unavailable** (Home Assistant entities, grouped by device). Plus a summary card for each system. |
 | **Containers** | Start, stop and restart your Unraid containers and open their web UIs. |
 | **Server** | Unraid CPU, RAM, array capacity, per-disk usage, temperatures and errors, and unread notifications. Start, shut down, reboot or force-stop VMs. |
 | **Home** | Lights, switches, heating, locks, covers, scenes, scripts and automations, all controllable. You can also install updates, check the config, restart HA and search every entity. |

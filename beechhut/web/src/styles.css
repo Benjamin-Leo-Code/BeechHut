@@ -520,3 +520,16 @@ table.disks { width: 100%; border-collapse: collapse; font-size: 14px; }
   .att-groups button > span:last-child { max-width: 100%; text-align: center; line-height: 1.2; overflow-wrap: anywhere; }
   .att-groups button { justify-content: flex-start; }
 }
+
+/* ── Unavailable: grouped by device, collapsed by default ─────────────── */
+.att-devices { padding: 4px 0; }
+.att-device + .att-device { border-top: 1px solid var(--border); }
+.att-device summary { display: flex; align-items: center; gap: 10px; padding: 12px 16px; cursor: pointer; list-style: none; font-weight: 550; }
+.att-device summary::-webkit-details-marker { display: none; }
+.att-device summary:hover { background: var(--surface-2); }
+.att-chevron { color: var(--muted); flex: none; transition: transform 0.15s; }
+.att-device[open] .att-chevron { transform: rotate(90deg); }
+.att-device-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.att-device-count { min-width: 22px; height: 22px; padding: 0 7px; border-radius: 99px; background: var(--surface-2); border: 1px solid var(--border); color: var(--muted); font-size: 12px; line-height: 20px; text-align: center; }
+.att-device .attention { padding: 0 0 4px; border-top: 1px solid var(--border); background: color-mix(in srgb, var(--surface-2) 50%, var(--surface)); }
+.att-device .attention button { padding-left: 42px; }

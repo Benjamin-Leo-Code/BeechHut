@@ -9,14 +9,14 @@ const settle = async (fn) => {
 };
 
 export async function buildOverview({ c, config }) {
-  const [containers, system, array, vms, unraidNotes, haStates, haInfo, unifi, links] = await Promise.all([
+  const [containers, system, array, vms, unraidNotes, haStates, haInfo, unifi, links, haDevices] = await Promise.all([
     settle(c.containers), settle(c.system), settle(c.array), settle(c.vms), settle(c.unraidNotifications),
-    settle(c.haStates), settle(c.haInfo), settle(c.unifi), settle(c.links),
+    settle(c.haStates), settle(c.haInfo), settle(c.unifi), settle(c.links), settle(c.haDevices),
   ]);
 
   const attention = [];
   // group: shown behind the Batteries / Updates / Unavailable buttons rather than in the main list.
-  const add = (level, source, title, detail, page, group = null) => attention.push({ level, source, title, detail, page, group });
+  const add = (level, source, title, detail, page, group = null, device = null) => attention.push({ level, source, title, detail, page, group, device });
 
   for (const [name, r] of [['Unraid', system], ['Home Assistant', haStates], ['UniFi', unifi]]) {
     if (r.status === 'error') add('alert', name, `Can't reach ${name}`, r.error, null);
@@ -69,9 +69,14 @@ export async function buildOverview({ c, config }) {
         .map((e) => ({ e, level: 1000, detail: 'Unavailable' })),
     ].sort((a, b) => a.level - b.level);
     for (const { e, detail } of low) add('warning', 'Home Assistant', e.name.replace(/ battery( level)?$/i, ''), detail, 'home', 'battery');
-    // Every unavailable entity, by name (batteries are already under Batteries).
+    // Every unavailable entity (batteries are already under Batteries), with the device it belongs to.
+    // If the device lookup fails, they're simply listed without devices.
+    const devices = haDevices.status === 'ok' ? haDevices.value : {};
     for (const e of s.filter((x) => x.state === 'unavailable' && x.deviceClass !== 'battery').sort((a, b) => a.name.localeCompare(b.name))) {
-      add('info', 'Home Assistant', e.name, e.id, 'home', 'unavailable');
+      const device = devices[e.id] || null;
+      // HA names entities "<device> <entity>"; inside a device group the device part is redundant.
+      const short = device && e.name.toLowerCase().startsWith(`${device.toLowerCase()} `) ? e.name.slice(device.length + 1) : e.name;
+      add('info', 'Home Assistant', short.charAt(0).toUpperCase() + short.slice(1), e.id, 'home', 'unavailable', device);
     }
   }
 

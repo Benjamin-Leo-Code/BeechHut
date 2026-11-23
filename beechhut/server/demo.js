@@ -79,6 +79,8 @@ const entities = [
   sensor('sensor.boiler_pressure', 'Boiler pressure', 'unavailable', 'bar', 'pressure'),
   sensor('sensor.shed_temperature', 'Shed temperature', 'unavailable', '°C', 'temperature'),
   sensor('switch.garden_lights', 'Garden lights', 'unavailable', null, null),
+  sensor('sensor.shed_sensor_humidity', 'Shed sensor humidity', 'unavailable', '%', 'humidity'),
+  sensor('sensor.old_template', 'Old template sensor', 'unavailable', null, null),
   sensor('binary_sensor.smoke_alarm_battery', 'Smoke alarm battery', 'on', null, 'battery'),
   sensor('sensor.landing_sensor_battery', 'Landing sensor battery', 'unavailable', '%', 'battery'),
 ];
@@ -137,6 +139,9 @@ export const demo = {
   homeassistant: {
     async info() { return { version: '2026.10.4', name: 'Beech', state: 'RUNNING', safeMode: false }; },
     async states() { return structuredClone(entities); },
+    async unavailableDevices() {
+      return { 'sensor.boiler_pressure': 'Boiler', 'sensor.shed_temperature': 'Shed sensor', 'sensor.landing_sensor_battery': 'Landing sensor', 'switch.garden_lights': 'Garden lights', 'sensor.shed_sensor_humidity': 'Shed sensor' };
+    },
     async callService(domain, service, data = {}) {
       await wait(250);
       const ids = [].concat(data.entity_id || []);

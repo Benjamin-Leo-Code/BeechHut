@@ -92,20 +92,52 @@ function Attention({ items, meta }: { items: AttentionItem[]; meta: Meta }) {
       {shown.length === 0 ? (
         <div className="all-clear"><CheckCircle2 size={22} /> {current.empty}</div>
       ) : (
-        <ul className="attention">
-          {shown.map((a, i) => (
-            <li key={`${view}-${i}`}>
-              <button onClick={() => a.page && navigate(a.page)} disabled={!a.page}>
-                <Dot tone={levelTone[a.level]} />
-                <span className="att-text"><strong>{a.title}</strong>{a.detail && <small>{a.detail}</small>}</span>
-                <span className="att-source">{a.source}</span>
-                {a.page && <ChevronRight size={16} className="muted" />}
-              </button>
-            </li>
-          ))}
-        </ul>
+        view === 'unavailable' ? <ByDevice items={shown} /> : <AttentionList items={shown} keyPrefix={view} />
       )}
     </Card>
+  );
+}
+
+function AttentionList({ items, keyPrefix }: { items: AttentionItem[]; keyPrefix: string }) {
+  return (
+    <ul className="attention">
+      {items.map((a, i) => (
+        <li key={`${keyPrefix}-${i}`}>
+          <button onClick={() => a.page && navigate(a.page)} disabled={!a.page}>
+            <Dot tone={levelTone[a.level]} />
+            <span className="att-text"><strong>{a.title}</strong>{a.detail && <small>{a.detail}</small>}</span>
+            <span className="att-source">{a.source}</span>
+            {a.page && <ChevronRight size={16} className="muted" />}
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+const NO_DEVICE = 'Not part of a device';
+
+/** Unavailable entities grouped by device, each group collapsed until tapped. */
+function ByDevice({ items }: { items: AttentionItem[] }) {
+  const groups = new Map<string, AttentionItem[]>();
+  for (const a of items) {
+    const k = a.device || NO_DEVICE;
+    groups.set(k, [...(groups.get(k) || []), a]);
+  }
+  const names = [...groups.keys()].sort((x, y) => (x === NO_DEVICE ? 1 : y === NO_DEVICE ? -1 : x.localeCompare(y)));
+  return (
+    <div className="att-devices">
+      {names.map((name) => (
+        <details key={name} className="att-device">
+          <summary>
+            <ChevronRight size={16} className="att-chevron" />
+            <span className="att-device-name">{name}</span>
+            <span className="att-device-count">{groups.get(name)!.length}</span>
+          </summary>
+          <AttentionList items={groups.get(name)!} keyPrefix={name} />
+        </details>
+      ))}
+    </div>
   );
 }
 

@@ -44,6 +44,22 @@ export function createHomeAssistant(cfg) {
       await api(`/services/${domain}/${service}`, { method: 'POST', body: data, timeout: 30000 });
       return { ok: true };
     },
+    /** The device each unavailable entity belongs to, as { entity_id: device name }, via HA's template API. */
+    async unavailableDevices() {
+      const template = [
+        '{%- set ns = namespace(out=[]) -%}',
+        "{%- for s in states if s.state == 'unavailable' -%}",
+        '{%- set d = device_id(s.entity_id) -%}',
+        "{%- set ns.out = ns.out + [[s.entity_id, ((device_attr(d, 'name_by_user') or device_attr(d, 'name') or '') if d else '')]] -%}",
+        '{%- endfor -%}',
+        '{{ ns.out | tojson }}',
+      ].join('');
+      let pairs = await api('/template', { method: 'POST', body: { template }, timeout: 15000 });
+      if (typeof pairs === 'string') pairs = JSON.parse(pairs);
+      const map = {};
+      for (const [id, name] of Array.isArray(pairs) ? pairs : []) if (id && name) map[id] = String(name);
+      return map;
+    },
     async checkConfig() {
       return api('/config/core/check_config', { method: 'POST', timeout: 60000 });
     },

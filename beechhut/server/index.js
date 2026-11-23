@@ -52,6 +52,7 @@ const c = {
   unraidNotifications: i.unraid && cached(30000, () => i.unraid.notifications()),
   haInfo: i.homeassistant && cached(60000, () => i.homeassistant.info()),
   haStates: i.homeassistant && cached(2000, () => i.homeassistant.states()),
+  haDevices: i.homeassistant && cached(60000, () => i.homeassistant.unavailableDevices()),
   unifi: i.unifi && cached(10000, () => i.unifi.summary()),
   links: cached(30000, () => i.links.list()),
 };
